@@ -575,50 +575,98 @@
     return { path, segments, exitName, distance, steps, rx, ry, doorX, doorY, floor, isTopRow };
   }
 
-  function renderFireExitSign(svgGroup, x, y) {
+  function renderFireExitSign(svgGroup, x, y, isVertical = false) {
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    rect.setAttribute("x", x - 26); rect.setAttribute("y", y - 10);
-    rect.setAttribute("width", "52"); rect.setAttribute("height", "20");
-    rect.setAttribute("rx", "3"); rect.setAttribute("fill", "#e2c044");
-    rect.setAttribute("stroke", "#111111"); rect.setAttribute("stroke-width", "1.2");
-    g.appendChild(rect);
 
-    const innerRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    innerRect.setAttribute("x", x - 24); innerRect.setAttribute("y", y - 8);
-    innerRect.setAttribute("width", "48"); innerRect.setAttribute("height", "16");
-    innerRect.setAttribute("rx", "2"); innerRect.setAttribute("fill", "none");
-    innerRect.setAttribute("stroke", "#111111"); innerRect.setAttribute("stroke-width", "0.8");
-    g.appendChild(innerRect);
+    if (isVertical) {
+      // Lengthwise / Vertical Fire Exit Sign placed outside lobby entrance
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x - 10); rect.setAttribute("y", y - 23);
+      rect.setAttribute("width", "20"); rect.setAttribute("height", "46");
+      rect.setAttribute("rx", "3"); rect.setAttribute("fill", "#e2c044");
+      rect.setAttribute("stroke", "#111111"); rect.setAttribute("stroke-width", "1.2");
+      g.appendChild(rect);
 
-    const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    txt1.setAttribute("x", x - 8); txt1.setAttribute("y", y - 2);
-    txt1.setAttribute("font-size", "5.5px"); txt1.setAttribute("font-weight", "900");
-    txt1.setAttribute("fill", "#111111"); txt1.textContent = "FIRE";
-    g.appendChild(txt1);
+      const innerRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      innerRect.setAttribute("x", x - 8); innerRect.setAttribute("y", y - 21);
+      innerRect.setAttribute("width", "16"); innerRect.setAttribute("height", "42");
+      innerRect.setAttribute("rx", "2"); innerRect.setAttribute("fill", "none");
+      innerRect.setAttribute("stroke", "#111111"); innerRect.setAttribute("stroke-width", "0.8");
+      g.appendChild(innerRect);
 
-    const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    txt2.setAttribute("x", x - 8); txt2.setAttribute("y", y + 4);
-    txt2.setAttribute("font-size", "5.5px"); txt2.setAttribute("font-weight", "900");
-    txt2.setAttribute("fill", "#111111"); txt2.textContent = "EXIT";
-    g.appendChild(txt2);
+      const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt1.setAttribute("x", x); txt1.setAttribute("y", y - 12);
+      txt1.setAttribute("font-size", "5px"); txt1.setAttribute("font-weight", "900");
+      txt1.setAttribute("fill", "#111111"); txt1.textContent = "FIRE";
+      g.appendChild(txt1);
 
-    const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    frame.setAttribute("x", x + 8); frame.setAttribute("y", y - 6);
-    frame.setAttribute("width", "12"); frame.setAttribute("height", "12");
-    frame.setAttribute("fill", "#111111");
-    g.appendChild(frame);
+      const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt2.setAttribute("x", x); txt2.setAttribute("y", y - 4);
+      txt2.setAttribute("font-size", "5px"); txt2.setAttribute("font-weight", "900");
+      txt2.setAttribute("fill", "#111111"); txt2.textContent = "EXIT";
+      g.appendChild(txt2);
 
-    const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    head.setAttribute("cx", x + 14); head.setAttribute("cy", y - 3);
-    head.setAttribute("r", "1.2"); head.setAttribute("fill", "#e2c044");
-    g.appendChild(head);
+      const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      frame.setAttribute("x", x - 6); frame.setAttribute("y", y + 4);
+      frame.setAttribute("width", "12"); frame.setAttribute("height", "12");
+      frame.setAttribute("fill", "#111111");
+      g.appendChild(frame);
 
-    const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    body.setAttribute("d", `M ${x+14} ${y-1.5} L ${x+13} ${y+2} L ${x+10} ${y+5} M ${x+13} ${y+2} L ${x+16} ${y+5}`);
-    body.setAttribute("stroke", "#e2c044"); body.setAttribute("stroke-width", "0.9");
-    body.setAttribute("fill", "none");
-    g.appendChild(body);
+      const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      head.setAttribute("cx", x); head.setAttribute("cy", y + 7);
+      head.setAttribute("r", "1.2"); head.setAttribute("fill", "#e2c044");
+      g.appendChild(head);
+
+      const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      body.setAttribute("d", `M ${x} ${y+8.5} L ${x-1} ${y+12} L ${x-3} ${y+15} M ${x-1} ${y+12} L ${x+2} ${y+15}`);
+      body.setAttribute("stroke", "#e2c044"); body.setAttribute("stroke-width", "0.9");
+      body.setAttribute("fill", "none");
+      g.appendChild(body);
+    } else {
+      // Horizontal Fire Exit Sign
+      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      rect.setAttribute("x", x - 26); rect.setAttribute("y", y - 10);
+      rect.setAttribute("width", "52"); rect.setAttribute("height", "20");
+      rect.setAttribute("rx", "3"); rect.setAttribute("fill", "#e2c044");
+      rect.setAttribute("stroke", "#111111"); rect.setAttribute("stroke-width", "1.2");
+      g.appendChild(rect);
+
+      const innerRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      innerRect.setAttribute("x", x - 24); innerRect.setAttribute("y", y - 8);
+      innerRect.setAttribute("width", "48"); innerRect.setAttribute("height", "16");
+      innerRect.setAttribute("rx", "2"); innerRect.setAttribute("fill", "none");
+      innerRect.setAttribute("stroke", "#111111"); innerRect.setAttribute("stroke-width", "0.8");
+      g.appendChild(innerRect);
+
+      const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt1.setAttribute("x", x - 8); txt1.setAttribute("y", y - 2);
+      txt1.setAttribute("font-size", "5.5px"); txt1.setAttribute("font-weight", "900");
+      txt1.setAttribute("fill", "#111111"); txt1.textContent = "FIRE";
+      g.appendChild(txt1);
+
+      const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt2.setAttribute("x", x - 8); txt2.setAttribute("y", y + 4);
+      txt2.setAttribute("font-size", "5.5px"); txt2.setAttribute("font-weight", "900");
+      txt2.setAttribute("fill", "#111111"); txt2.textContent = "EXIT";
+      g.appendChild(txt2);
+
+      const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      frame.setAttribute("x", x + 8); frame.setAttribute("y", y - 6);
+      frame.setAttribute("width", "12"); frame.setAttribute("height", "12");
+      frame.setAttribute("fill", "#111111");
+      g.appendChild(frame);
+
+      const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      head.setAttribute("cx", x + 14); head.setAttribute("cy", y - 3);
+      head.setAttribute("r", "1.2"); head.setAttribute("fill", "#e2c044");
+      g.appendChild(head);
+
+      const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      body.setAttribute("d", `M ${x+14} ${y-1.5} L ${x+13} ${y+2} L ${x+10} ${y+5} M ${x+13} ${y+2} L ${x+16} ${y+5}`);
+      body.setAttribute("stroke", "#e2c044"); body.setAttribute("stroke-width", "0.9");
+      body.setAttribute("fill", "none");
+      g.appendChild(body);
+    }
 
     svgGroup.appendChild(g);
   }
@@ -696,32 +744,29 @@
     const svgEl = document.getElementById(svgId);
     if (!svgEl) return;
 
-    // ViewBox Cropping with full headroom for cat ear callout badges
-    let cropViewBox = "50 35 960 415";
+    // ViewBox Cropping with full headroom and footroom for cat ear callout badges and vertical exit signs
+    let cropViewBox = "50 20 960 440";
     if (roomName === "DM Office") {
-      cropViewBox = "350 110 230 190";
+      cropViewBox = "350 100 240 210";
     } else if (roomName.startsWith("D")) {
-      cropViewBox = "500 35 490 235";
+      cropViewBox = "500 20 500 260";
     } else if (roomName.startsWith("C")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "500 35 490 235";
+        cropViewBox = "500 20 500 260";
       } else {
-        // Zoomed out view including Bridgeway, Circular Stairs, and GF Lobby Path
-        cropViewBox = "500 35 490 325";
+        cropViewBox = "500 20 500 340";
       }
     } else if (roomName.startsWith("A")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 250 490 220";
+        cropViewBox = "85 210 500 250";
       } else {
-        // Expanded view including GF Lobby and Main Entrance Exit
-        cropViewBox = "85 200 490 255";
+        cropViewBox = "85 180 500 280";
       }
     } else if (roomName.startsWith("B")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 250 490 220";
+        cropViewBox = "85 210 500 250";
       } else {
-        // Zoomed out view including Bridgeway, Circular Stairs, and GF Lobby Path
-        cropViewBox = "85 190 490 265";
+        cropViewBox = "85 170 500 290";
       }
     }
 

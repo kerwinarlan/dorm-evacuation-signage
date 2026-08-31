@@ -696,32 +696,29 @@
     const svgEl = document.getElementById(svgId);
     if (!svgEl) return;
 
-    // ViewBox Cropping with full headroom for cat ear callout badges
-    let cropViewBox = "50 35 960 415";
+    // ViewBox Cropping with full headroom and footroom for cat ear callout badges and vertical exit signs
+    let cropViewBox = "50 20 960 440";
     if (roomName === "DM Office") {
-      cropViewBox = "350 110 230 190";
+      cropViewBox = "350 100 240 210";
     } else if (roomName.startsWith("D")) {
-      cropViewBox = "500 35 490 235";
+      cropViewBox = "500 20 500 260";
     } else if (roomName.startsWith("C")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "500 35 490 235";
+        cropViewBox = "500 20 500 260";
       } else {
-        // Zoomed out view including Bridgeway, Circular Stairs, and GF Lobby Path
-        cropViewBox = "500 35 490 325";
+        cropViewBox = "500 20 500 340";
       }
     } else if (roomName.startsWith("A")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 250 490 220";
+        cropViewBox = "85 210 500 250";
       } else {
-        // Expanded view including GF Lobby and Main Entrance Exit
-        cropViewBox = "85 200 490 255";
+        cropViewBox = "85 180 500 280";
       }
     } else if (roomName.startsWith("B")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 250 490 220";
+        cropViewBox = "85 210 500 250";
       } else {
-        // Zoomed out view including Bridgeway, Circular Stairs, and GF Lobby Path
-        cropViewBox = "85 190 490 265";
+        cropViewBox = "85 170 500 290";
       }
     }
 
