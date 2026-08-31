@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sampaguita Residence Hall: Floorplan Model (GF & 2F)</title>
+<style>
+  :root {
+    --bg-color: #0b0d12;
+    --panel-bg: #161922;
+    --accent-red: #e62429;
+    --accent-blue: #00509e;
+    --text-color: #e2e8f0;
+    --border-color: #2d3748;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  header {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 { font-size: 1.2rem; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+  h1 span { color: var(--accent-red); }
+
+  .nav-tabs {
+    display: flex;
+    gap: 8px;
+  }
+
+  .tab-btn {
+    background: #0f1117;
+    border: 1px solid var(--border-color);
+    color: #a0aec0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  }
+
+  .tab-btn:hover { border-color: var(--accent-blue); color: #fff; }
+  .tab-btn.active { background: var(--accent-blue); color: #fff; border-color: var(--accent-blue); }
+
+  .legend {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
+
+  main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 20px;
+  }
+
+  svg {
+    background: #11141d;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+
+  polygon {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    stroke-width: 1.5;
+  }
+
+  polygon:hover {
+    fill-opacity: 0.85 !important;
+    stroke: #ffffff !important;
+    stroke-width: 2.5 !important;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));
+  }
+
+  text {
+    font-size: 9px;
+    font-weight: 600;
+    fill: #ffffff;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+    font-family: system-ui, sans-serif;
+  }
+
+  #tooltip {
+    position: absolute;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--accent-blue);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 100;
+  }
+
+  .controls-bar {
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #a0aec0;
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>🏢 Sampaguita Residence Hall: <span id="floorTitle">Ground Floor (GF)</span></h1>
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="btnGF" onclick="switchFloor('GF')">Ground Floor (GF)</button>
+      <button class="tab-btn" id="btn2F" onclick="switchFloor('2F')">Second Floor (2F)</button>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="box" style="background: rgba(0, 80, 158, 0.5);"></div> Boys Wing</div>
+      <div class="legend-item"><div class="box" style="background: rgba(230, 36, 41, 0.5);"></div> Girls Wing</div>
+      <div class="legend-item"><div class="box" style="background: rgba(40, 167, 69, 0.5);"></div> Admin / Assembly / Roof</div>
+      <div class="legend-item"><div class="box" style="background: rgba(255, 193, 7, 0.5);"></div> T&B / Stairwells</div>
+    </div>
+  </header>
+
+  <main>
+    <svg id="floorplanSvg" width="1050" height="500" viewBox="50 50 960 400">
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+
+      <!-- Rendered Zones -->
+      <g id="zonesGroup"></g>
+      <g id="labelsGroup"></g>
+    </svg>
+    <div id="tooltip"></div>
+  </main>
+
+  <div class="controls-bar">
+    <span id="infoText">Ground Floor Architecture: Main Assembly Hall, DM Office, Laundry, Rooms 1–38, & Fire Exits</span>
+    <button onclick="renderFloor()">Reset View</button>
+  </div>
+
+<script>
+  // Ground Floor Model
+  const MODEL_GF = [
+    { name: "GF Lobby", cat: "admin", pts: [[517, 203], [556, 203], [556, 303], [517, 303]] },
+    { name: "Main Assembly Hall", cat: "admin", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
+    { name: "DM Office", cat: "admin", pts: [[478, 153], [517, 153], [517, 203], [478, 203]] },
+    { name: "Laundry", cat: "admin", pts: [[324, 241], [362, 241], [362, 274], [324, 274]] },
+    
+    // Corridor D - Top Row (Left-to-Right: Empty X, Empty X, D15..D13, T&B, D12..D10, D17)
+    { name: "X", cat: "empty", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+    { name: "X", cat: "empty", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+    { name: "D15", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
+    { name: "D14", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
+    { name: "D13", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
+    { name: "Boys T&B", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+    { name: "D12", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
+    { name: "D11", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
+    { name: "D10", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
+    { name: "D17", cat: "empty", pts: [[903, 83], [941, 83], [941, 135], [903, 135]] },
+    { name: "Boys Stairwell", cat: "hall", pts: [[941, 83], [979, 83], [979, 135], [941, 135]] },
+
+    // Corridor D - Bottom Row (Left-to-Right: D1..D9, Empty X)
+    { name: "D1", cat: "empty", pts: [[556, 153], [594, 153], [594, 203], [556, 203]] },
+    { name: "D2", cat: "empty", pts: [[594, 153], [633, 153], [633, 203], [594, 203]] },
+    { name: "D3", cat: "boys", pts: [[633, 153], [671, 153], [671, 203], [633, 203]] },
+    { name: "D4", cat: "empty", pts: [[671, 153], [710, 153], [710, 203], [671, 203]] },
+    { name: "D5", cat: "boys", pts: [[710, 153], [748, 153], [748, 203], [710, 203]] },
+    { name: "D6", cat: "boys", pts: [[748, 153], [787, 153], [787, 203], [748, 203]] },
+    { name: "D7", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
+    { name: "D8", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
+    { name: "D9", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
+    { name: "X", cat: "empty", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+    { name: "Boys Fire Exit", cat: "hall", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
+
+    // Boys Corridor
+    { name: "Corridor D Hallway", cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
+
+    // Corridor A - Top Row (Right-to-Left: A11 (unoccupied), A12..A14, T&B, A15, A16, A26 (unoccupied), A17)
+    { name: "A11", cat: "empty", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
+    { name: "A12", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
+    { name: "A13", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
+    { name: "A14", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
+    { name: "Girls T&B", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+    { name: "A15", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
+    { name: "A16", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
+    { name: "A26", cat: "empty", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+    { name: "A17", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
+    { name: "Girls Stairwell", cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
+
+    // Corridor A - Bottom Row (Left-to-Right: PsychServ, A1..A10)
+    { name: "PsychServ", cat: "admin", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
+    { name: "A1", cat: "girls", pts: [[170, 370], [208, 370], [208, 420], [170, 420]] },
+    { name: "A2", cat: "girls", pts: [[208, 370], [247, 370], [247, 420], [208, 420]] },
+    { name: "A3", cat: "girls", pts: [[247, 370], [285, 370], [285, 420], [247, 420]] },
+    { name: "A4", cat: "girls", pts: [[285, 370], [324, 370], [324, 420], [285, 420]] },
+    { name: "A5", cat: "girls", pts: [[324, 370], [362, 370], [362, 420], [324, 420]] },
+    { name: "A6", cat: "girls", pts: [[362, 370], [401, 370], [401, 420], [362, 420]] },
+    { name: "A7", cat: "girls", pts: [[401, 370], [440, 370], [440, 420], [401, 420]] },
+    { name: "A8", cat: "girls", pts: [[440, 370], [478, 370], [478, 420], [440, 420]] },
+    { name: "A9", cat: "girls", pts: [[478, 370], [517, 370], [517, 420], [478, 420]] },
+    { name: "A10", cat: "girls", pts: [[517, 370], [556, 370], [556, 420], [517, 420]] },
+    { name: "Girls Fire Exit", cat: "hall", pts: [[91, 370], [131, 370], [131, 420], [91, 420]] },
+
+    // Girls Corridor
+    { name: "Corridor A Hallway", cat: "hall", pts: [[91, 352], [91, 370], [556, 370], [556, 303], [517, 303], [517, 352]] },
+
+    // Circular Stair
+    { name: "Circular Stairs", cat: "stairs", isCircle: true, cx: 546, cy: 344, r: 8 }
+  ];
+
+  // Second Floor Model
+  const MODEL_2F = [
+    { name: "Bridgeway", cat: "bridge", pts: [[517, 203], [556, 203], [556, 303], [517, 303]] },
+    { name: "Existing roof over lobby", cat: "roof", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
+
+    // Corridor C - Top Row (Left-to-Right: C20 to C12)
+    { name: "C20", cat: "boys", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+    { name: "C19", cat: "boys", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+    { name: "C18", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
+    { name: "C17", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
+    { name: "C16", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
+    { name: "Boys T&B", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+    { name: "C15", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
+    { name: "C14", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
+    { name: "C13", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
+    { name: "C12", cat: "boys", pts: [[903, 83], [941, 83], [941, 135], [903, 135]] },
+    { name: "Boys Stairwell", cat: "hall", pts: [[941, 83], [979, 83], [979, 135], [941, 135]] },
+
+    // Corridor C - Bottom Row (Left-to-Right: C1 (Empty X) to C11)
+    { name: "C1", cat: "empty", pts: [[556, 153], [594, 153], [594, 203], [556, 203]] },
+    { name: "C2", cat: "boys", pts: [[594, 153], [633, 153], [633, 203], [594, 203]] },
+    { name: "C3", cat: "boys", pts: [[633, 153], [671, 153], [671, 203], [633, 203]] },
+    { name: "C4", cat: "boys", pts: [[671, 153], [710, 153], [710, 203], [671, 203]] },
+    { name: "C5", cat: "boys", pts: [[710, 153], [748, 153], [748, 203], [710, 203]] },
+    { name: "C6", cat: "boys", pts: [[748, 153], [787, 153], [787, 203], [748, 203]] },
+    { name: "C7", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
+    { name: "C8", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
+    { name: "C9", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
+    { name: "C10", cat: "boys", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+    { name: "C11", cat: "boys", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
+
+    // Boys Corridor
+    { name: "Corridor C Hallway", cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
+
+    // Corridor B - Top Row (Right-to-Left: B13 to B20)
+    { name: "B13", cat: "girls", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
+    { name: "B14", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
+    { name: "B15", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
+    { name: "B16", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
+    { name: "Girls T&B", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+    { name: "B17", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
+    { name: "B18", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
+    { name: "B19", cat: "girls", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+    { name: "B20", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
+    { name: "Girls Stairwell", cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
+
+    // Corridor B - Bottom Row (Left-to-Right: B1 to B12)
+    { name: "B1", cat: "girls", pts: [[91, 370], [131, 370], [131, 420], [91, 420]] },
+    { name: "B2", cat: "girls", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
+    { name: "B3", cat: "girls", pts: [[170, 370], [208, 370], [208, 420], [170, 420]] },
+    { name: "B4", cat: "girls", pts: [[208, 370], [247, 370], [247, 420], [208, 420]] },
+    { name: "B5", cat: "girls", pts: [[247, 370], [285, 370], [285, 420], [247, 420]] },
+    { name: "B6", cat: "girls", pts: [[285, 370], [324, 370], [324, 420], [285, 420]] },
+    { name: "B7", cat: "girls", pts: [[324, 370], [362, 370], [362, 420], [324, 420]] },
+    { name: "B8", cat: "girls", pts: [[362, 370], [401, 370], [401, 420], [362, 420]] },
+    { name: "B9", cat: "girls", pts: [[401, 370], [440, 370], [440, 420], [401, 420]] },
+    { name: "B10", cat: "girls", pts: [[440, 370], [478, 370], [478, 420], [440, 420]] },
+    { name: "B11", cat: "girls", pts: [[478, 370], [517, 370], [517, 420], [478, 420]] },
+    { name: "B12", cat: "girls", pts: [[517, 370], [556, 370], [556, 420], [517, 420]] },
+
+    // Girls Corridor
+    { name: "Corridor B Hallway", cat: "hall", pts: [[91, 352], [91, 370], [556, 370], [556, 303], [517, 303], [517, 352]] },
+
+    // Circular Stair
+    { name: "Circular Stairs", cat: "stairs", isCircle: true, cx: 546, cy: 344, r: 8 }
+  ];
+
+  const COLOR_MAP = {
+    boys: { fill: "rgba(0, 80, 158, 0.45)", stroke: "#0073e6" },
+    girls: { fill: "rgba(230, 36, 41, 0.45)", stroke: "#ff4d4d" },
+    admin: { fill: "rgba(40, 167, 69, 0.45)", stroke: "#2ecc71" },
+    roof: { fill: "rgba(108, 117, 125, 0.25)", stroke: "#6c757d" },
+    bridge: { fill: "rgba(0, 180, 216, 0.4)", stroke: "#00b4d8" },
+    unlabeled: { fill: "rgba(255, 255, 255, 0.15)", stroke: "#a0aec0" },
+    utility: { fill: "rgba(255, 193, 7, 0.45)", stroke: "#f1c40f" },
+    stairs: { fill: "rgba(255, 193, 7, 0.7)", stroke: "#d39e00" },
+    hall: { fill: "rgba(111, 66, 193, 0.25)", stroke: "#9b59b6" }
+  };
+
+  let currentFloor = 'GF';
+
+  function switchFloor(floor) {
+    currentFloor = floor;
+    document.getElementById('btnGF').classList.toggle('active', floor === 'GF');
+    document.getElementById('btn2F').classList.toggle('active', floor === '2F');
+    document.getElementById('floorTitle').innerText = floor === 'GF' ? 'Ground Floor (GF)' : 'Second Floor (2F)';
+    document.getElementById('infoText').innerText = floor === 'GF' 
+      ? 'Ground Floor Architecture: Main Assembly Hall, DM Office, Laundry, Rooms 1–38, & Fire Exits'
+      : 'Second Floor Architecture: Roof over lobby, 2F Bridgeway, Rooms 39–76, & Unlabeled Endcaps';
+    renderFloor();
+  }
+
+  function renderFloor() {
+    const zonesGroup = document.getElementById('zonesGroup');
+    const labelsGroup = document.getElementById('labelsGroup');
+    const tooltip = document.getElementById('tooltip');
+
+    zonesGroup.innerHTML = '';
+    labelsGroup.innerHTML = '';
+
+    const model = currentFloor === 'GF' ? MODEL_GF : MODEL_2F;
+
+    model.forEach((zone) => {
+      let shapeEl;
+      const style = COLOR_MAP[zone.cat] || COLOR_MAP.hall;
+
+      if (zone.isCircle) {
+        shapeEl = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        shapeEl.setAttribute("cx", zone.cx);
+        shapeEl.setAttribute("cy", zone.cy);
+        shapeEl.setAttribute("r", zone.r);
+      } else {
+        shapeEl = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        const pointsStr = zone.pts.map(p => p.join(",")).join(" ");
+        shapeEl.setAttribute("points", pointsStr);
+      }
+
+      shapeEl.setAttribute("fill", style.fill);
+      shapeEl.setAttribute("stroke", style.stroke);
+
+      shapeEl.addEventListener("mousemove", (e) => {
+        tooltip.style.display = "block";
+        tooltip.style.left = (e.pageX + 15) + "px";
+        tooltip.style.top = (e.pageY + 15) + "px";
+        tooltip.innerHTML = `<strong>${zone.name || "Unlabeled Room"}</strong><br>Floor: ${currentFloor}<br>Category: ${zone.cat.toUpperCase()}`;
+      });
+
+      shapeEl.addEventListener("mouseleave", () => {
+        tooltip.style.display = "none";
+      });
+
+      zonesGroup.appendChild(shapeEl);
+
+      // Render Big Red/White X Mark overlay for Empty Rooms
+      if (zone.cat === "empty") {
+        const minX = Math.min(...zone.pts.map(p => p[0]));
+        const maxX = Math.max(...zone.pts.map(p => p[0]));
+        const minY = Math.min(...zone.pts.map(p => p[1]));
+        const maxY = Math.max(...zone.pts.map(p => p[1]));
+
+        const x1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        x1.setAttribute("x1", minX + 4);
+        x1.setAttribute("y1", minY + 4);
+        x1.setAttribute("x2", maxX - 4);
+        x1.setAttribute("y2", maxY - 4);
+        x1.setAttribute("stroke", "#ff4d4d");
+        x1.setAttribute("stroke-width", "2");
+        x1.setAttribute("stroke-opacity", "0.8");
+        zonesGroup.appendChild(x1);
+
+        const x2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        x2.setAttribute("x1", maxX - 4);
+        x2.setAttribute("y1", minY + 4);
+        x2.setAttribute("x2", minX + 4);
+        x2.setAttribute("y2", maxY - 4);
+        x2.setAttribute("stroke", "#ff4d4d");
+        x2.setAttribute("stroke-width", "2");
+        x2.setAttribute("stroke-opacity", "0.8");
+        zonesGroup.appendChild(x2);
+      }
+
+      // Render Architectural Stair Details (Dog-Leg U-shaped Stairwell with Center Spine & Treads)
+      if (zone.name.includes("Stairwell")) {
+        const minX = Math.min(...zone.pts.map(p => p[0]));
+        const maxX = Math.max(...zone.pts.map(p => p[0]));
+        const minY = Math.min(...zone.pts.map(p => p[1]));
+        const maxY = Math.max(...zone.pts.map(p => p[1]));
+        const midX = (minX + maxX) / 2;
+
+        // Vertical Center Divider Wall / Spine (U-turn landing partition)
+        const spine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        spine.setAttribute("x1", midX);
+        spine.setAttribute("y1", minY + 6);
+        spine.setAttribute("x2", midX);
+        spine.setAttribute("y2", maxY - 6);
+        spine.setAttribute("stroke", "#ffffff");
+        spine.setAttribute("stroke-width", "1.5");
+        zonesGroup.appendChild(spine);
+
+        // Horizontal Treads split across left flight & right flight
+        const steps = 6;
+        const stepH = (maxY - minY - 12) / steps;
+
+        for (let i = 0; i <= steps; i++) {
+          const ly = minY + 6 + i * stepH;
+
+          // Left Flight Treads
+          const lineL = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          lineL.setAttribute("x1", minX + 2);
+          lineL.setAttribute("y1", ly);
+          lineL.setAttribute("x2", midX - 1);
+          lineL.setAttribute("y2", ly);
+          lineL.setAttribute("stroke", "rgba(255, 255, 255, 0.5)");
+          lineL.setAttribute("stroke-width", "0.8");
+          zonesGroup.appendChild(lineL);
+
+          // Right Flight Treads
+          const lineR = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          lineR.setAttribute("x1", midX + 1);
+          lineR.setAttribute("y1", ly);
+          lineR.setAttribute("x2", maxX - 2);
+          lineR.setAttribute("y2", ly);
+          lineR.setAttribute("stroke", "rgba(255, 255, 255, 0.5)");
+          lineR.setAttribute("stroke-width", "0.8");
+          zonesGroup.appendChild(lineR);
+        }
+      } else if (zone.isCircle) {
+        const numSlices = 8;
+        for (let i = 0; i < numSlices; i++) {
+          const angle = (i * 2 * Math.PI) / numSlices;
+          const x2 = zone.cx + zone.r * Math.cos(angle);
+          const y2 = zone.cy + zone.r * Math.sin(angle);
+          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+          line.setAttribute("x1", zone.cx);
+          line.setAttribute("y1", zone.cy);
+          line.setAttribute("x2", x2);
+          line.setAttribute("y2", y2);
+          line.setAttribute("stroke", "rgba(255, 255, 255, 0.6)");
+          line.setAttribute("stroke-width", "0.8");
+          zonesGroup.appendChild(line);
+        }
+      }
+
+      if (zone.name) {
+        let labelX, labelY;
+        
+        if (zone.isCircle) {
+          labelX = zone.cx;
+          labelY = zone.cy;
+        } else if (zone.name.includes("Hallway")) {
+          labelX = zone.name.includes("Corridor A") || zone.name.includes("Corridor B") ? 324 : 748;
+          labelY = zone.name.includes("Corridor A") || zone.name.includes("Corridor B") ? 361 : 144;
+        } else {
+          labelX = zone.pts.reduce((sum, p) => sum + p[0], 0) / zone.pts.length;
+          labelY = zone.pts.reduce((sum, p) => sum + p[1], 0) / zone.pts.length;
+        }
+
+        let shortName = zone.name.replace("Room ", "R").replace("GF ", "");
+        if (zone.name.includes("T&B") || zone.name.includes("roof")) {
+          shortName = zone.name;
+        } else if (shortName.length > 8 && !shortName.includes("Hall")) {
+          shortName = shortName.substring(0, 7) + ".";
+        }
+
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", labelX);
+        txt.setAttribute("y", labelY);
+        txt.textContent = shortName;
+        labelsGroup.appendChild(txt);
+      }
+    });
+  }
+
+  renderFloor();
+</script>
+</body>
+</html>

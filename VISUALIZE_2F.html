@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sampaguita 2nd Floor (2F) Vector Visualizer - Refined</title>
+<style>
+  :root {
+    --bg-color: #0b0d12;
+    --panel-bg: #161922;
+    --accent-red: #e62429;
+    --accent-blue: #00509e;
+    --text-color: #e2e8f0;
+    --border-color: #2d3748;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  header {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 { font-size: 1.2rem; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+  h1 span { color: var(--accent-blue); }
+
+  .legend {
+    display: flex;
+    gap: 15px;
+    font-size: 0.85rem;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .box { width: 14px; height: 14px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
+
+  main {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 20px;
+  }
+
+  svg {
+    background: #11141d;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+
+  polygon {
+    transition: all 0.2s ease;
+    cursor: pointer;
+    stroke-width: 1.5;
+  }
+
+  polygon:hover {
+    fill-opacity: 0.85 !important;
+    stroke: #ffffff !important;
+    stroke-width: 2.5 !important;
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));
+  }
+
+  text {
+    font-size: 9px;
+    font-weight: 600;
+    fill: #ffffff;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+    font-family: system-ui, sans-serif;
+  }
+
+  #tooltip {
+    position: absolute;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--accent-blue);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    pointer-events: none;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    z-index: 100;
+  }
+
+  .controls-bar {
+    background: var(--panel-bg);
+    border-top: 1px solid var(--border-color);
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: #a0aec0;
+  }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>🏢 Sampaguita Residence Hall: <span>2nd Floor (2F) Structural Model</span></h1>
+    <div class="legend">
+      <div class="legend-item"><div class="box" style="background: rgba(0, 80, 158, 0.5);"></div> Boys Wing (Rooms 39–57)</div>
+      <div class="legend-item"><div class="box" style="background: rgba(230, 36, 41, 0.5);"></div> Girls Wing (Rooms 58–76)</div>
+      <div class="legend-item"><div class="box" style="background: rgba(108, 117, 125, 0.3);"></div> Roof Over Lobby</div>
+      <div class="legend-item"><div class="box" style="background: rgba(255, 255, 255, 0.2);"></div> Unlabeled Endcap Rooms</div>
+    </div>
+  </header>
+
+  <main>
+    <svg id="floorplanSvg" width="1050" height="500" viewBox="50 50 960 400">
+      <defs>
+        <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#grid)" />
+
+      <!-- Rendered Zones -->
+      <g id="zonesGroup"></g>
+      <g id="labelsGroup"></g>
+    </svg>
+    <div id="tooltip"></div>
+  </main>
+
+  <div class="controls-bar">
+    <span>2F Architecture: Roof over lobby | Bridgeway connection | Unlabeled Endcap Rooms | Study & Utils removed</span>
+    <button onclick="window.location.reload()">Reset View</button>
+  </div>
+
+<script>
+  const MODEL_2F = [
+    // Central Zones & Architectural Features
+    { name: "2F Bridgeway", cat: "bridge", pts: [[517, 203], [556, 203], [556, 303], [517, 303]] },
+    { name: "Existing roof over lobby", cat: "roof", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
+
+    // Boys Wing Top Row (Rooms 39–43, T&B, Rooms 44–47)
+    { name: "Room 39", cat: "boys", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+    { name: "Room 40", cat: "boys", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+    { name: "Room 41", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
+    { name: "Room 42", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
+    { name: "Room 43", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
+    { name: "2F Boys T&B", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+    { name: "Room 44", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
+    { name: "Room 45", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
+    { name: "Room 46", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
+    { name: "Room 47", cat: "boys", pts: [[903, 83], [941, 83], [941, 135], [903, 135]] },
+    { name: "Boys Stairwell", cat: "hall", pts: [[941, 83], [979, 83], [979, 135], [941, 135]] },
+
+    // Boys Wing Bottom Row (Rooms 57–48)
+    { name: "Room 57", cat: "boys", pts: [[556, 153], [594, 153], [594, 203], [556, 203]] },
+    { name: "Room 56", cat: "boys", pts: [[594, 153], [633, 153], [633, 203], [594, 203]] },
+    { name: "Room 55", cat: "boys", pts: [[633, 153], [671, 153], [671, 203], [633, 203]] },
+    { name: "Room 54", cat: "boys", pts: [[671, 153], [710, 153], [710, 203], [671, 203]] },
+    { name: "Room 53", cat: "boys", pts: [[710, 153], [748, 153], [748, 203], [710, 203]] },
+    { name: "Room 52", cat: "boys", pts: [[748, 153], [787, 153], [787, 203], [748, 203]] },
+    { name: "Room 51", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
+    { name: "Room 50", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
+    { name: "Room 49", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
+    { name: "Room 48", cat: "boys", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+
+    // Unlabeled Room over GF Boys Fire Exit
+    { name: "", cat: "unlabeled", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
+
+    // Boys Corridor
+    { name: "Boys Hallway", cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
+
+    // Girls Wing Top Row (Rooms 58–61, T&B, Rooms 62–65)
+    { name: "Room 58", cat: "girls", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
+    { name: "Room 59", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
+    { name: "Room 60", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
+    { name: "Room 61", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
+    { name: "Girls T&B", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+    { name: "Room 62", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
+    { name: "Room 63", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
+    { name: "Room 64", cat: "girls", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+    { name: "Room 65", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
+    { name: "Girls Stairwell", cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
+
+    // Girls Wing Bottom Row (Rooms 66–76)
+    { name: "Room 66", cat: "girls", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
+    { name: "Room 67", cat: "girls", pts: [[170, 370], [208, 370], [208, 420], [170, 420]] },
+    { name: "Room 68", cat: "girls", pts: [[208, 370], [247, 370], [247, 420], [208, 420]] },
+    { name: "Room 69", cat: "girls", pts: [[247, 370], [285, 370], [285, 420], [247, 420]] },
+    { name: "Room 70", cat: "girls", pts: [[285, 370], [324, 370], [324, 420], [285, 420]] },
+    { name: "Room 71", cat: "girls", pts: [[324, 370], [362, 370], [362, 420], [324, 420]] },
+    { name: "Room 72", cat: "girls", pts: [[362, 370], [401, 370], [401, 420], [362, 420]] },
+    { name: "Room 73", cat: "girls", pts: [[401, 370], [440, 370], [440, 420], [401, 420]] },
+    { name: "Room 74", cat: "girls", pts: [[440, 370], [478, 370], [478, 420], [440, 420]] },
+    { name: "Room 75", cat: "girls", pts: [[478, 370], [517, 370], [517, 420], [478, 420]] },
+    { name: "Room 76", cat: "girls", pts: [[517, 370], [556, 370], [556, 420], [517, 420]] },
+
+    // Unlabeled Room over GF Girls Fire Exit
+    { name: "", cat: "unlabeled", pts: [[91, 370], [131, 370], [131, 420], [91, 420]] },
+
+    // Girls Corridor
+    { name: "Girls Hallway", cat: "hall", pts: [[91, 352], [91, 370], [556, 370], [556, 303], [517, 303], [517, 352]] },
+
+    // Circular Stairs
+    { name: "Circular Stairs", cat: "utility", pts: [[545, 336], [550, 339], [556, 347], [548, 352], [541, 352], [539, 343], [543, 337]] }
+  ];
+
+  const COLOR_MAP = {
+    boys: { fill: "rgba(0, 80, 158, 0.45)", stroke: "#0073e6" },
+    girls: { fill: "rgba(230, 36, 41, 0.45)", stroke: "#ff4d4d" },
+    roof: { fill: "rgba(108, 117, 125, 0.25)", stroke: "#6c757d" },
+    bridge: { fill: "rgba(0, 180, 216, 0.4)", stroke: "#00b4d8" },
+    unlabeled: { fill: "rgba(255, 255, 255, 0.15)", stroke: "#a0aec0" },
+    utility: { fill: "rgba(255, 193, 7, 0.45)", stroke: "#f1c40f" },
+    hall: { fill: "rgba(111, 66, 193, 0.25)", stroke: "#9b59b6" }
+  };
+
+  const zonesGroup = document.getElementById('zonesGroup');
+  const labelsGroup = document.getElementById('labelsGroup');
+  const tooltip = document.getElementById('tooltip');
+
+  MODEL_2F.forEach((zone) => {
+    const poly = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+    const pointsStr = zone.pts.map(p => p.join(",")).join(" ");
+    poly.setAttribute("points", pointsStr);
+
+    const style = COLOR_MAP[zone.cat] || COLOR_MAP.hall;
+    poly.setAttribute("fill", style.fill);
+    poly.setAttribute("stroke", style.stroke);
+
+    poly.addEventListener("mousemove", (e) => {
+      tooltip.style.display = "block";
+      tooltip.style.left = (e.pageX + 15) + "px";
+      tooltip.style.top = (e.pageY + 15) + "px";
+      tooltip.innerHTML = `<strong>${zone.name || "Unlabeled Room"}</strong><br>Category: ${zone.cat.toUpperCase()}<br>Vertices: ${zone.pts.length}`;
+    });
+
+    poly.addEventListener("mouseleave", () => {
+      tooltip.style.display = "none";
+    });
+
+    zonesGroup.appendChild(poly);
+
+    if (zone.name) {
+      const avgX = zone.pts.reduce((sum, p) => sum + p[0], 0) / zone.pts.length;
+      const avgY = zone.pts.reduce((sum, p) => sum + p[1], 0) / zone.pts.length;
+
+      let shortName = zone.name.replace("Room ", "R");
+      if (zone.name.includes("T&B") || zone.name.includes("roof")) {
+        shortName = zone.name;
+      } else if (shortName.length > 8 && !shortName.includes("Hall")) {
+        shortName = shortName.substring(0, 7) + ".";
+      }
+
+      const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      txt.setAttribute("x", avgX);
+      txt.setAttribute("y", avgY);
+      txt.textContent = shortName;
+      labelsGroup.appendChild(txt);
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sampaguita Evacuation Signage Generator & Pathfinding Simulator</title>
+<style>
+  :root {
+    --bg-color: #0b0d12;
+    --panel-bg: #161922;
+    --accent-red: #e62429;
+    --accent-green: #28a745;
+    --accent-blue: #00509e;
+    --text-color: #e2e8f0;
+    --border-color: #2d3748;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  header {
+    background: var(--panel-bg);
+    border-bottom: 1px solid var(--border-color);
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 { font-size: 1.2rem; color: #ffffff; display: flex; align-items: center; gap: 10px; }
+  h1 span { color: var(--accent-green); }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  select {
+    background: #1a1d27;
+    border: 1px solid var(--accent-blue);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1000;
+  }
+
+  button {
+    background: var(--accent-blue);
+    border: 1px solid var(--border-color);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button:hover { background: #003d7a; }
+
+  main {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Left Panel: SVG Floorplan & Path */
+  #map-container {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+    padding: 20px;
+  }
+
+  svg {
+    background: #11141d;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  }
+
+  polygon, circle { transition: all 0.2s; }
+
+  .route-path-gf {
+    fill: none;
+    stroke: var(--accent-green);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 6 3;
+    animation: dash 1s linear infinite;
+    filter: drop-shadow(0 0 5px rgba(40, 167, 69, 0.8));
+  }
+
+  .route-path-2f {
+    fill: none;
+    stroke: #00b4d8;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 6 3;
+    animation: dash 1.2s linear infinite;
+    filter: drop-shadow(0 0 5px rgba(0, 180, 216, 0.8));
+  }
+
+  @keyframes dash {
+    to { stroke-dashoffset: -12; }
+  }
+
+  .pin-you-are-here {
+    fill: var(--accent-red);
+    stroke: #ffffff;
+    stroke-width: 1.5;
+  }
+
+  .pin-exit {
+    fill: var(--accent-green);
+    stroke: #ffffff;
+    stroke-width: 1.5;
+  }
+
+  /* Right Panel: Printable Signage Card Preview */
+  #signage-card {
+    width: 380px;
+    background: #ffffff;
+    color: #111111;
+    border-left: 2px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    justify-content: space-between;
+    box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+  }
+
+  .card-header {
+    border-bottom: 4px solid var(--accent-red);
+    padding-bottom: 12px;
+    text-align: center;
+  }
+
+  .card-header h2 { font-size: 1.4rem; color: var(--accent-red); text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+  .card-header p { font-size: 0.85rem; color: #555; font-weight: bold; margin-top: 4px; }
+
+  .card-body {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .info-box {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .info-label { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: bold; }
+  .info-val { font-size: 1.3rem; font-weight: 800; color: #000; margin-top: 2px; }
+
+  .instructions-list {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: #333;
+    padding-left: 18px;
+  }
+
+  .card-footer {
+    background: var(--accent-green);
+    color: white;
+    padding: 12px;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.9rem;
+  }
+
+  text { font-size: 9px; font-weight: 600; fill: #ffffff; text-anchor: middle; dominant-baseline: central; font-family: system-ui, sans-serif; pointer-events: none; }
+</style>
+</head>
+<body>
+
+  <header>
+    <h1>🚨 Evacuation Signage Generator: <span>Pathfinder Pipeline</span></h1>
+    <div class="controls">
+      <label style="font-size:0.85rem; color:#a0aec0;">Select Target Room:</label>
+      <select id="roomSelect" onchange="runPathfinding()"></select>
+      <button onclick="window.print()">🖨 Print Signage Card</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="map-container">
+      <svg id="floorplanSvg" width="1050" height="500" viewBox="50 50 960 400">
+        <defs>
+          <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="1"/>
+          </pattern>
+          <marker id="arrow-green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#28a745" />
+          </marker>
+          <marker id="arrow-blue" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="3.5" markerHeight="3.5" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#00b4d8" />
+          </marker>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+
+        <g id="zonesGroup"></g>
+        <g id="pathGroup"></g>
+        <g id="labelsGroup"></g>
+        <g id="pinsGroup"></g>
+      </svg>
+    </div>
+
+    <!-- Printable Signage Card -->
+    <div id="signage-card">
+      <div>
+        <div class="card-header">
+          <h2>EMERGENCY EVACUATION</h2>
+          <p>SAMPAGUITA RESIDENCE HALL</p>
+        </div>
+
+        <div class="card-body">
+          <div class="info-box" style="border-left: 4px solid var(--accent-red);">
+            <div class="info-label">Current Location</div>
+            <div class="info-val" id="cardRoomId">Room D3</div>
+            <div style="font-size: 0.8rem; color: #666;" id="cardFloor">Ground Floor (GF)</div>
+          </div>
+
+          <div class="info-box" style="border-left: 4px solid var(--accent-green);">
+            <div class="info-label">Assigned Emergency Exit</div>
+            <div class="info-val" id="cardExitName" style="color: var(--accent-green);">Main Entrance Exit</div>
+            <div style="font-size: 0.8rem; color: #666;" id="cardDistance">Distance: ~18 meters</div>
+          </div>
+
+          <div style="font-size: 0.85rem; font-weight: bold; color: #111;">Evacuation Protocol:</div>
+          <ol class="instructions-list" id="cardSteps">
+            <li>Exit room and turn left into the hallway.</li>
+            <li>Proceed straight towards the central lobby junction.</li>
+            <li>Evacuate out through the Main Lobby Entrance on the right side.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        IN CASE OF FIRE: DO NOT USE ELEVATORS
+      </div>
+    </div>
+  </main>
+
+<script>
+  // Complete Architectural Model Data
+  const MODEL = {
+    GF: [
+      { name: "GF Lobby", cat: "admin", pts: [[517, 203], [556, 203], [556, 303], [517, 303]] },
+      { name: "Main Assembly Hall", cat: "admin", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
+      { name: "DM Office", cat: "admin", pts: [[478, 153], [517, 153], [517, 203], [478, 203]] },
+      { name: "Laundry", cat: "admin", pts: [[324, 241], [362, 241], [362, 274], [324, 274]] },
+      { name: "X", cat: "empty", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+      { name: "X", cat: "empty", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+      { name: "D15", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
+      { name: "D14", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
+      { name: "D13", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
+      { name: "Boys T&B", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+      { name: "D12", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
+      { name: "D11", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
+      { name: "D10", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
+      { name: "D17", cat: "empty", pts: [[903, 83], [941, 83], [941, 135], [903, 135]] },
+      { name: "Boys Stairwell", cat: "hall", pts: [[941, 83], [979, 83], [979, 135], [941, 135]] },
+      { name: "D1", cat: "empty", pts: [[556, 153], [594, 153], [594, 203], [556, 203]] },
+      { name: "D2", cat: "empty", pts: [[594, 153], [633, 153], [633, 203], [594, 203]] },
+      { name: "D3", cat: "boys", pts: [[633, 153], [671, 153], [671, 203], [633, 203]] },
+      { name: "D4", cat: "empty", pts: [[671, 153], [710, 153], [710, 203], [671, 203]] },
+      { name: "D5", cat: "boys", pts: [[710, 153], [748, 153], [748, 203], [710, 203]] },
+      { name: "D6", cat: "boys", pts: [[748, 153], [787, 153], [787, 203], [748, 203]] },
+      { name: "D7", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
+      { name: "D8", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
+      { name: "D9", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
+      { name: "X", cat: "empty", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+      { name: "Boys Fire Exit", cat: "hall", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
+      { name: "Corridor D Hallway", cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
+      { name: "A11", cat: "empty", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
+      { name: "A12", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
+      { name: "A13", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
+      { name: "A14", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
+      { name: "Girls T&B", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+      { name: "A15", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
+      { name: "A16", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
+      { name: "A26", cat: "empty", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+      { name: "A17", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
+      { name: "Girls Stairwell", cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
+      { name: "PsychServ", cat: "admin", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
+      { name: "A1", cat: "girls", pts: [[170, 370], [208, 370], [208, 420], [170, 420]] },
+      { name: "A2", cat: "girls", pts: [[208, 370], [247, 370], [247, 420], [208, 420]] },
+      { name: "A3", cat: "girls", pts: [[247, 370], [285, 370], [285, 420], [247, 420]] },
+      { name: "A4", cat: "girls", pts: [[285, 370], [324, 370], [324, 420], [285, 420]] },
+      { name: "A5", cat: "girls", pts: [[324, 370], [362, 370], [362, 420], [324, 420]] },
+      { name: "A6", cat: "girls", pts: [[362, 370], [401, 370], [401, 420], [362, 420]] },
+      { name: "A7", cat: "girls", pts: [[401, 370], [440, 370], [440, 420], [401, 420]] },
+      { name: "A8", cat: "girls", pts: [[440, 370], [478, 370], [478, 420], [440, 420]] },
+      { name: "A9", cat: "girls", pts: [[478, 370], [517, 370], [517, 420], [478, 420]] },
+      { name: "A10", cat: "girls", pts: [[517, 370], [556, 370], [556, 420], [517, 420]] },
+      { name: "Girls Fire Exit", cat: "hall", pts: [[91, 370], [131, 370], [131, 420], [91, 420]] },
+      { name: "Corridor A Hallway", cat: "hall", pts: [[91, 352], [91, 370], [556, 370], [556, 303], [517, 303], [517, 352]] },
+      { name: "Circular Stairs", cat: "stairs", isCircle: true, cx: 546, cy: 344, r: 8 }
+    ],
+    "2F": [
+      { name: "Bridgeway", cat: "bridge", pts: [[517, 203], [556, 203], [556, 303], [517, 303]] },
+      { name: "Existing roof over lobby", cat: "roof", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
+      { name: "C20", cat: "boys", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+      { name: "C19", cat: "boys", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+      { name: "C18", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
+      { name: "C17", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
+      { name: "C16", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
+      { name: "Boys T&B", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+      { name: "C15", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
+      { name: "C14", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
+      { name: "C13", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
+      { name: "C12", cat: "boys", pts: [[903, 83], [941, 83], [941, 135], [903, 135]] },
+      { name: "Boys Stairwell", cat: "hall", pts: [[941, 83], [979, 83], [979, 135], [941, 135]] },
+      { name: "C1", cat: "empty", pts: [[556, 153], [594, 153], [594, 203], [556, 203]] },
+      { name: "C2", cat: "boys", pts: [[594, 153], [633, 153], [633, 203], [594, 203]] },
+      { name: "C3", cat: "boys", pts: [[633, 153], [671, 153], [671, 203], [633, 203]] },
+      { name: "C4", cat: "boys", pts: [[671, 153], [710, 153], [710, 203], [671, 203]] },
+      { name: "C5", cat: "boys", pts: [[710, 153], [748, 153], [748, 203], [710, 203]] },
+      { name: "C6", cat: "boys", pts: [[748, 153], [787, 153], [787, 203], [748, 203]] },
+      { name: "C7", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
+      { name: "C8", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
+      { name: "C9", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
+      { name: "C10", cat: "boys", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+      { name: "C11", cat: "boys", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
+      { name: "Corridor C Hallway", cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
+      { name: "B13", cat: "girls", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
+      { name: "B14", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
+      { name: "B15", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
+      { name: "B16", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
+      { name: "Girls T&B", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+      { name: "B17", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
+      { name: "B18", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
+      { name: "B19", cat: "girls", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+      { name: "B20", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
+      { name: "Girls Stairwell", cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
+      { name: "B1", cat: "girls", pts: [[91, 370], [131, 370], [131, 420], [91, 420]] },
+      { name: "B2", cat: "girls", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
+      { name: "B3", cat: "girls", pts: [[170, 370], [208, 370], [208, 420], [170, 420]] },
+      { name: "B4", cat: "girls", pts: [[208, 370], [247, 370], [247, 420], [208, 420]] },
+      { name: "B5", cat: "girls", pts: [[247, 370], [285, 370], [285, 420], [247, 420]] },
+      { name: "B6", cat: "girls", pts: [[285, 370], [324, 370], [324, 420], [285, 420]] },
+      { name: "B7", cat: "girls", pts: [[324, 370], [362, 370], [362, 420], [324, 420]] },
+      { name: "B8", cat: "girls", pts: [[362, 370], [401, 370], [401, 420], [362, 420]] },
+      { name: "B9", cat: "girls", pts: [[401, 370], [440, 370], [440, 420], [401, 420]] },
+      { name: "B10", cat: "girls", pts: [[440, 370], [478, 370], [478, 420], [440, 420]] },
+      { name: "B11", cat: "girls", pts: [[478, 370], [517, 370], [517, 420], [478, 420]] },
+      { name: "B12", cat: "girls", pts: [[517, 370], [556, 370], [556, 420], [517, 420]] },
+      { name: "Corridor B Hallway", cat: "hall", pts: [[91, 352], [91, 370], [556, 370], [556, 303], [517, 303], [517, 352]] },
+      { name: "Circular Stairs", cat: "stairs", isCircle: true, cx: 546, cy: 344, r: 8 }
+    ]
+  };
+
+  const COLOR_MAP = {
+    boys: { fill: "rgba(0, 80, 158, 0.45)", stroke: "#0073e6" },
+    girls: { fill: "rgba(230, 36, 41, 0.45)", stroke: "#ff4d4d" },
+    admin: { fill: "rgba(40, 167, 69, 0.45)", stroke: "#2ecc71" },
+    roof: { fill: "rgba(108, 117, 125, 0.25)", stroke: "#6c757d" },
+    bridge: { fill: "rgba(0, 180, 216, 0.4)", stroke: "#00b4d8" },
+    empty: { fill: "rgba(255, 255, 255, 0.12)", stroke: "#a0aec0" },
+    utility: { fill: "rgba(255, 193, 7, 0.45)", stroke: "#f1c40f" },
+    stairs: { fill: "rgba(255, 193, 7, 0.7)", stroke: "#d39e00" },
+    hall: { fill: "rgba(111, 66, 193, 0.25)", stroke: "#9b59b6" }
+  };
+
+  const roomSelect = document.getElementById("roomSelect");
+  
+  function populateSelect() {
+    roomSelect.innerHTML = "";
+    ["GF", "2F"].forEach(floor => {
+      const optGroup = document.createElement("optgroup");
+      optGroup.label = floor === "GF" ? "Ground Floor Rooms" : "Second Floor Rooms";
+      
+      MODEL[floor].forEach(zone => {
+        if (zone.name && !zone.name.includes("Hallway") && !zone.name.includes("Stairs") && zone.name !== "X") {
+          const opt = document.createElement("option");
+          opt.value = `${floor}:${zone.name}`;
+          opt.textContent = `[${floor}] ${zone.name}`;
+          optGroup.appendChild(opt);
+        }
+      });
+      roomSelect.appendChild(optGroup);
+    });
+    roomSelect.value = "GF:D3";
+  }
+
+  function calculatePath(floor, roomName) {
+    let path = [];
+    let segments = [];
+    let exitName = "Main Entrance Exit";
+    let distance = "~18 meters";
+    let steps = [];
+
+    const targetRoom = MODEL[floor].find(z => z.name === roomName);
+    if (!targetRoom) return null;
+
+    let rx = targetRoom.pts ? targetRoom.pts.reduce((s, p) => s + p[0], 0) / targetRoom.pts.length : targetRoom.cx;
+    let ry = targetRoom.pts ? targetRoom.pts.reduce((s, p) => s + p[1], 0) / targetRoom.pts.length : targetRoom.cy;
+
+    if (floor === "GF") {
+      if (roomName.startsWith("D")) {
+        if (rx > 780) {
+          exitName = "Boys Wing Fire Exit";
+          distance = "~12 meters";
+          path = [[rx, ry], [rx, 144], [960, 144], [960, 178]];
+          segments = [{ pts: path, is2F: false, hasArrow: true }];
+          steps = [
+            `Exit ${roomName} into Corridor D hallway.`,
+            `Turn RIGHT and proceed East towards the wing endcap.`,
+            `Evacuate directly through the Boys Wing Fire Exit door.`
+          ];
+        } else {
+          exitName = "Main Entrance Exit (Right Side)";
+          distance = "~18 meters";
+          path = [[rx, ry], [rx, 144], [536, 144], [536, 253], [556, 253]];
+          segments = [{ pts: path, is2F: false, hasArrow: true }];
+          steps = [
+            `Exit ${roomName} into Corridor D hallway.`,
+            `Turn LEFT towards the central lobby hallway.`,
+            `Turn SOUTH into the Lobby, then turn RIGHT (East) out through the Main Entrance Door.`
+          ];
+        }
+      } else {
+        if (rx < 300) {
+          exitName = "Girls Wing Fire Exit";
+          distance = "~14 meters";
+          path = [[rx, ry], [rx, 361], [111, 361], [111, 395]];
+          segments = [{ pts: path, is2F: false, hasArrow: true }];
+          steps = [
+            `Exit ${roomName} into Corridor A hallway.`,
+            `Turn LEFT and proceed West to the stairwell endcap.`,
+            `Evacuate through the Girls Wing Fire Exit door.`
+          ];
+        } else {
+          exitName = "Main Entrance Exit (Right Side)";
+          distance = "~20 meters";
+          path = [[rx, ry], [rx, 361], [536, 361], [536, 253], [556, 253]];
+          segments = [{ pts: path, is2F: false, hasArrow: true }];
+          steps = [
+            `Exit ${roomName} into Corridor A hallway.`,
+            `Turn RIGHT towards the central lobby hallway.`,
+            `Turn NORTH into the Lobby, then turn RIGHT (East) out through the Main Entrance Door.`
+          ];
+        }
+      }
+    } else {
+      if (roomName.startsWith("C")) {
+        if (rx > 780) {
+          exitName = "Boys Stairwell -> GF Exit";
+          distance = "~26 meters";
+          path = [[rx, ry], [rx, 144], [960, 144], [960, 109]];
+          segments = [{ pts: path, is2F: true, hasArrow: true }];
+          steps = [
+            `Exit ${roomName} into Corridor C hallway.`,
+            `Turn RIGHT towards the East stairwell.`,
+            `Descend Boys Stairwell to Ground Floor and exit.`
+          ];
+        } else {
+          exitName = "Circular Stairs -> Main Lobby Entrance";
+          distance = "~28 meters";
+          path = [[rx, ry], [rx, 144], [536, 144], [546, 344], [536, 253], [556, 253]];
+          segments = [
+            { pts: [[rx, ry], [rx, 144], [536, 144], [546, 344]], is2F: true, hasArrow: true },
+            { pts: [[546, 344], [536, 253], [556, 253]], is2F: false, hasArrow: true }
+          ];
+          steps = [
+            `Exit ${roomName} into Corridor C hallway.`,
+            `Cross 2F Bridgeway (Cyan path - windows only).`,
+            `Descend Central Circular Stairs to Ground Floor, then follow Green egress path RIGHT out the Main Entrance Door.`
+          ];
+        }
+      } else {
+        if (rx < 300) {
+          exitName = "Girls Stairwell -> GF Exit";
+          distance = "~24 meters";
+          path = [[rx, ry], [rx, 361], [111, 361], [111, 327]];
+          segments = [{ pts: path, is2F: true, hasArrow: true }];
+          steps = [
+            `Exit ${roomName} into Corridor B hallway.`,
+            `Turn LEFT towards the West stairwell.`,
+            `Descend Girls Stairwell to Ground Floor and exit.`
+          ];
+        } else {
+          exitName = "Circular Stairs -> Main Lobby Entrance";
+          distance = "~26 meters";
+          path = [[rx, ry], [rx, 361], [536, 361], [546, 344], [536, 253], [556, 253]];
+          segments = [
+            { pts: [[rx, ry], [rx, 361], [536, 361], [546, 344]], is2F: true, hasArrow: true },
+            { pts: [[546, 344], [536, 253], [556, 253]], is2F: false, hasArrow: true }
+          ];
+          steps = [
+            `Exit ${roomName} into Corridor B hallway.`,
+            `Cross 2F Bridgeway (Cyan path - windows only).`,
+            `Descend Central Circular Stairs to Ground Floor, then follow Green egress path RIGHT out the Main Entrance Door.`
+          ];
+        }
+      }
+    }
+
+    return { path, segments, exitName, distance, steps, rx, ry, floor };
+  }
+
+  function runPathfinding() {
+    const val = roomSelect.value;
+    const [floor, roomName] = val.split(":");
+    const res = calculatePath(floor, roomName);
+
+    if (!res) return;
+
+    document.getElementById("cardRoomId").innerText = roomName;
+    document.getElementById("cardFloor").innerText = floor === "GF" ? "Ground Floor (GF)" : "Second Floor (2F)";
+    document.getElementById("cardExitName").innerText = res.exitName;
+    document.getElementById("cardDistance").innerText = `Distance: ${res.distance}`;
+
+    const stepsOl = document.getElementById("cardSteps");
+    stepsOl.innerHTML = "";
+    res.steps.forEach(s => {
+      const li = document.createElement("li");
+      li.innerText = s;
+      stepsOl.appendChild(li);
+    });
+
+    renderMapWithRoute(floor, res);
+  }
+
+  function renderMapWithRoute(floor, res) {
+    const zonesGroup = document.getElementById('zonesGroup');
+    const pathGroup = document.getElementById('pathGroup');
+    const labelsGroup = document.getElementById('labelsGroup');
+    const pinsGroup = document.getElementById('pinsGroup');
+
+    zonesGroup.innerHTML = '';
+    pathGroup.innerHTML = '';
+    labelsGroup.innerHTML = '';
+    pinsGroup.innerHTML = '';
+
+    const model = MODEL[floor];
+
+    // 1. Draw Floorplan Zones
+    model.forEach((zone) => {
+      let shapeEl;
+      const style = COLOR_MAP[zone.cat] || COLOR_MAP.hall;
+
+      if (zone.isCircle) {
+        shapeEl = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        shapeEl.setAttribute("cx", zone.cx);
+        shapeEl.setAttribute("cy", zone.cy);
+        shapeEl.setAttribute("r", zone.r);
+      } else {
+        shapeEl = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+        shapeEl.setAttribute("points", zone.pts.map(p => p.join(",")).join(" "));
+      }
+
+      shapeEl.setAttribute("fill", style.fill);
+      shapeEl.setAttribute("stroke", style.stroke);
+      shapeEl.setAttribute("stroke-width", "1.5");
+      zonesGroup.appendChild(shapeEl);
+
+      // Empty Room X
+      if (zone.cat === "empty") {
+        const minX = Math.min(...zone.pts.map(p => p[0]));
+        const maxX = Math.max(...zone.pts.map(p => p[0]));
+        const minY = Math.min(...zone.pts.map(p => p[1]));
+        const maxY = Math.max(...zone.pts.map(p => p[1]));
+
+        const x1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        x1.setAttribute("x1", minX + 4); x1.setAttribute("y1", minY + 4);
+        x1.setAttribute("x2", maxX - 4); x1.setAttribute("y2", maxY - 4);
+        x1.setAttribute("stroke", "#ff4d4d"); x1.setAttribute("stroke-width", "2");
+        zonesGroup.appendChild(x1);
+
+        const x2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        x2.setAttribute("x1", maxX - 4); x2.setAttribute("y1", minY + 4);
+        x2.setAttribute("x2", minX + 4); x2.setAttribute("y2", maxY - 4);
+        x2.setAttribute("stroke", "#ff4d4d"); x2.setAttribute("stroke-width", "2");
+        zonesGroup.appendChild(x2);
+      }
+
+      // Labels
+      if (zone.name) {
+        let labelX, labelY;
+        if (zone.isCircle) {
+          labelX = zone.cx; labelY = zone.cy;
+        } else if (zone.name.includes("Hallway")) {
+          labelX = zone.name.includes("A") || zone.name.includes("B") ? 324 : 748;
+          labelY = zone.name.includes("A") || zone.name.includes("B") ? 361 : 144;
+        } else {
+          labelX = zone.pts.reduce((sum, p) => sum + p[0], 0) / zone.pts.length;
+          labelY = zone.pts.reduce((sum, p) => sum + p[1], 0) / zone.pts.length;
+        }
+
+        let shortName = zone.name.replace("Room ", "R").replace("GF ", "");
+        if (zone.name.includes("T&B") || zone.name.includes("roof")) {
+          shortName = zone.name;
+        } else if (shortName.length > 8 && !shortName.includes("Hall")) {
+          shortName = shortName.substring(0, 7) + ".";
+        }
+
+        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        txt.setAttribute("x", labelX); txt.setAttribute("y", labelY);
+        txt.textContent = shortName;
+        labelsGroup.appendChild(txt);
+      }
+    });
+
+    // 2. Draw Multi-Segment Polyline Route Path with Floor-Specific Colors (Blue for 2F, Green for GF)
+    if (res.segments && res.segments.length > 0) {
+      res.segments.forEach(seg => {
+        const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        pathEl.setAttribute("points", seg.pts.map(p => p.join(",")).join(" "));
+        pathEl.setAttribute("class", seg.is2F ? "route-path-2f" : "route-path-gf");
+        if (seg.hasArrow) {
+          pathEl.setAttribute("marker-end", seg.is2F ? "url(#arrow-blue)" : "url(#arrow-green)");
+        }
+        pathGroup.appendChild(pathEl);
+      });
+    } else if (res.path && res.path.length > 1) {
+      const pathEl = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+      pathEl.setAttribute("points", res.path.map(p => p.join(",")).join(" "));
+      pathEl.setAttribute("class", floor === "2F" ? "route-path-2f" : "route-path-gf");
+      pathEl.setAttribute("marker-end", floor === "2F" ? "url(#arrow-blue)" : "url(#arrow-green)");
+      pathGroup.appendChild(pathEl);
+    }
+
+    // Pins removed per user request (so room labels are unobscured)
+  }
+
+  populateSelect();
+  runPathfinding();
+</script>
+</body>
+</html>

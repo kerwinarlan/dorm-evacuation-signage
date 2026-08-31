@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sampaguita Interactive Floorplan Coordinate Input & Cumulative Zone Plotter</title>
+<style>
+  :root {
+    --bg-color: #0f1117;
+    --panel-bg: #1a1d27;
+    --accent-red: #e62429;
+    --accent-blue: #00509e;
+    --text-color: #e2e8f0;
+    --border-color: #2d3748;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Left Panel: Canvas Area */
+  #canvas-container {
+    flex: 1;
+    position: relative;
+    background: #090a0f;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    padding: 20px;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  canvas {
+    border: 2px solid var(--border-color);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    background: #11141d;
+    cursor: crosshair;
+  }
+
+  /* Right Panel: Controls & Data Output */
+  #sidebar {
+    width: 480px;
+    background: var(--panel-bg);
+    border-left: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+    overflow-y: auto;
+  }
+
+  h2 { font-size: 1.1rem; color: var(--accent-red); display: flex; align-items: center; justify-content: space-between; }
+  
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label { font-size: 0.8rem; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; }
+
+  input, select, button, textarea {
+    background: #0f1117;
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent-blue);
+    outline: none;
+  }
+
+  button {
+    cursor: pointer;
+    background: var(--accent-blue);
+    border: none;
+    font-weight: bold;
+    color: white;
+    padding: 10px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  button:hover { background: #003d7a; }
+  button.danger { background: var(--accent-red); }
+  button.danger:hover { background: #b31b20; }
+  button.success { background: #28a745; }
+  button.success:hover { background: #1e7e34; }
+
+  .btn-row { display: flex; gap: 8px; }
+  .btn-row button { flex: 1; }
+
+  /* Coordinate Input Rows */
+  .coord-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    background: #0d0f15;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+  }
+
+  .coord-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .coord-row span {
+    font-size: 0.8rem;
+    width: 60px;
+    color: #a0aec0;
+  }
+
+  .coord-row input {
+    width: 80px;
+    padding: 4px 8px;
+    text-align: center;
+  }
+
+  /* Zone List Display */
+  .saved-zones-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 140px;
+    overflow-y: auto;
+    background: #0d0f15;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+  }
+
+  .zone-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+
+  textarea {
+    height: 180px;
+    resize: vertical;
+    font-family: monospace;
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .instructions {
+    background: rgba(0, 80, 158, 0.15);
+    border-left: 3px solid var(--accent-blue);
+    padding: 10px;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #cbd5e0;
+  }
+</style>
+</head>
+<body>
+
+  <!-- Canvas Display -->
+  <div id="canvas-container">
+    <canvas id="floorplanCanvas" width="800" height="600"></canvas>
+  </div>
+
+  <!-- Sidebar Control & Cumulative Inputs -->
+  <div id="sidebar">
+    <h2>
+      <span>📍 Floorplan Cumulative Mapper</span>
+      <span style="font-size: 0.8rem; color: #a0aec0;" id="zoneCountTag">0 Saved Zones</span>
+    </h2>
+
+    <div class="instructions">
+      <strong>Cumulative Plotting:</strong><br>
+      1. Type/click room corners $\to$ Click <strong>"Save Zone"</strong>.<br>
+      2. Previous rooms stay rendered on canvas.<br>
+      3. Type the next room name & repeat!
+    </div>
+
+    <div class="control-group">
+      <label>1. Floorplan Image (Optional)</label>
+      <input type="file" id="imageLoader" accept="image/*">
+    </div>
+
+    <div class="control-group">
+      <label>2. Current Room Name</label>
+      <input type="text" id="zoneName" value="Room 101" placeholder="e.g. Room 101, Lobby">
+    </div>
+
+    <div class="control-group">
+      <label>3. Active Room Coordinates</label>
+      <div class="coord-inputs" id="coordInputsContainer">
+        <!-- Input rows dynamically injected -->
+      </div>
+      <div class="btn-row" style="margin-top: 6px;">
+        <button id="addCoordRowBtn">+ Add Corner Point</button>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button id="saveZoneBtn" class="success">➕ Save Zone & Start Next</button>
+      <button id="clearCurrentBtn" class="danger">Clear Current</button>
+    </div>
+
+    <div class="control-group">
+      <label>4. Saved Rooms / Zones (<span id="savedZonesCount">0</span>)</label>
+      <div class="saved-zones-list" id="savedZonesContainer">
+        <span style="color: #666; font-size: 0.8rem;">No saved zones yet.</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label>5. Cumulative Output (Markdown)</label>
+      <textarea id="markdownOutput" readonly placeholder="Cumulative Markdown coordinate log..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button id="copyMdBtn">📋 Copy Cumulative Markdown</button>
+      <button id="clearAllBtn" class="danger">🗑 Clear All Zones</button>
+    </div>
+  </div>
+
+<script>
+  const canvas = document.getElementById('floorplanCanvas');
+  const ctx = canvas.getContext('2d');
+  const imageLoader = document.getElementById('imageLoader');
+  const zoneNameInput = document.getElementById('zoneName');
+  const coordContainer = document.getElementById('coordInputsContainer');
+  const savedZonesContainer = document.getElementById('savedZonesContainer');
+  const addCoordRowBtn = document.getElementById('addCoordRowBtn');
+  const saveZoneBtn = document.getElementById('saveZoneBtn');
+  const clearCurrentBtn = document.getElementById('clearCurrentBtn');
+  const clearAllBtn = document.getElementById('clearAllBtn');
+  const markdownOutput = document.getElementById('markdownOutput');
+  const copyMdBtn = document.getElementById('copyMdBtn');
+  const zoneCountTag = document.getElementById('zoneCountTag');
+  const savedZonesCountSpan = document.getElementById('savedZonesCount');
+
+  let bgImage = null;
+  let savedZones = []; // [{ name: "Room 101", points: [{x,y}, ...] }]
+  let currentPoints = [];
+
+  // Palette colors for distinct cumulative zones
+  const ZONE_COLORS = [
+    '#00509e', '#28a745', '#fd7e14', '#6f42c1', '#17a2b8', '#e83e8c', '#ffc107'
+  ];
+
+  // Load Image
+  imageLoader.addEventListener('change', (e) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      bgImage = new Image();
+      bgImage.onload = () => {
+        canvas.width = bgImage.width > 1000 ? 1000 : bgImage.width;
+        canvas.height = (bgImage.height * canvas.width) / bgImage.width;
+        redraw();
+      };
+      bgImage.src = event.target.result;
+    };
+    if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+  });
+
+  // Canvas Click
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.round(e.clientX - rect.left);
+    const y = Math.round(e.clientY - rect.top);
+
+    currentPoints.push({ x, y });
+    updateCoordInputRows();
+    redraw();
+  });
+
+  function updateCoordInputRows() {
+    coordContainer.innerHTML = '';
+    currentPoints.forEach((pt, idx) => {
+      const row = document.createElement('div');
+      row.className = 'coord-row';
+      row.innerHTML = `
+        <span>Pt ${idx + 1}:</span>
+        <label style="margin:0;">X:</label>
+        <input type="number" value="${pt.x}" data-idx="${idx}" data-axis="x" class="pt-input">
+        <label style="margin:0;">Y:</label>
+        <input type="number" value="${pt.y}" data-idx="${idx}" data-axis="y" class="pt-input">
+        <button style="padding: 2px 8px;" class="danger" onclick="removePoint(${idx})">×</button>
+      `;
+      coordContainer.appendChild(row);
+    });
+
+    document.querySelectorAll('.pt-input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'));
+        const axis = e.target.getAttribute('data-axis');
+        const val = parseInt(e.target.value) || 0;
+        currentPoints[idx][axis] = val;
+        redraw();
+      });
+    });
+  }
+
+  addCoordRowBtn.addEventListener('click', () => {
+    currentPoints.push({ x: 100, y: 100 });
+    updateCoordInputRows();
+    redraw();
+  });
+
+  window.removePoint = function(idx) {
+    currentPoints.splice(idx, 1);
+    updateCoordInputRows();
+    redraw();
+  };
+
+  // Save Zone & Cumulatively Store
+  saveZoneBtn.addEventListener('click', () => {
+    if (currentPoints.length < 3) {
+      alert("Please enter at least 3 points for a room zone.");
+      return;
+    }
+
+    const name = zoneNameInput.value.trim() || `Room ${savedZones.length + 1}`;
+    
+    // Cumulatively append new zone
+    savedZones.push({
+      name: name,
+      points: JSON.parse(JSON.stringify(currentPoints))
+    });
+
+    // Reset current points for next room
+    currentPoints = [];
+    updateCoordInputRows();
+
+    // Increment room name (e.g., Room 101 -> Room 102)
+    const match = name.match(/(\d+)$/);
+    if (match) {
+      const nextNum = parseInt(match[1]) + 1;
+      zoneNameInput.value = name.replace(/\d+$/, nextNum);
+    } else {
+      zoneNameInput.value = `Room ${savedZones.length + 1}`;
+    }
+
+    renderSavedZonesList();
+    redraw();
+    updateMarkdown();
+  });
+
+  function renderSavedZonesList() {
+    savedZonesContainer.innerHTML = '';
+    savedZonesCountSpan.innerText = savedZones.length;
+    zoneCountTag.innerText = `${savedZones.length} Saved Zones`;
+
+    if (savedZones.length === 0) {
+      savedZonesContainer.innerHTML = '<span style="color: #666; font-size: 0.8rem;">No saved zones yet.</span>';
+      return;
+    }
+
+    savedZones.forEach((z, idx) => {
+      const item = document.createElement('div');
+      item.className = 'zone-item';
+      const color = ZONE_COLORS[idx % ZONE_COLORS.length];
+      item.innerHTML = `
+        <span><strong style="color:${color};">■</strong> ${z.name} (${z.points.length} pts)</span>
+        <button style="padding:2px 6px; font-size:0.75rem;" class="danger" onclick="deleteZone(${idx})">Delete</button>
+      `;
+      savedZonesContainer.appendChild(item);
+    });
+  }
+
+  window.deleteZone = function(idx) {
+    savedZones.splice(idx, 1);
+    renderSavedZonesList();
+    redraw();
+    updateMarkdown();
+  };
+
+  clearCurrentBtn.addEventListener('click', () => {
+    currentPoints = [];
+    updateCoordInputRows();
+    redraw();
+  });
+
+  clearAllBtn.addEventListener('click', () => {
+    if (confirm("Delete all cumulatively saved zones?")) {
+      savedZones = [];
+      currentPoints = [];
+      updateCoordInputRows();
+      renderSavedZonesList();
+      redraw();
+      updateMarkdown();
+    }
+  });
+
+  copyMdBtn.addEventListener('click', () => {
+    markdownOutput.select();
+    document.execCommand('copy');
+    alert("Copied cumulative markdown coordinates to clipboard!");
+  });
+
+  function redraw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (bgImage) {
+      ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = '#11141d';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#1e2330';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+    }
+
+    // Draw ALL Cumulatively Saved Zones with distinct colors
+    savedZones.forEach((zone, idx) => {
+      const color = ZONE_COLORS[idx % ZONE_COLORS.length];
+      drawPolygon(zone.points, color, hexToRgba(color, 0.25), true);
+      drawLabel(zone.name, zone.points);
+    });
+
+    // Draw Currently Active Polygon being plotted
+    if (currentPoints.length > 0) {
+      drawPolygon(currentPoints, '#e62429', 'rgba(230, 36, 41, 0.25)', false);
+    }
+  }
+
+  function drawPolygon(points, strokeColor, fillColor, isClosed) {
+    if (points.length === 0) return;
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, points[0].y);
+    for (let i = 1; i < points.length; i++) {
+      ctx.lineTo(points[i].x, points[i].y);
+    }
+    if (isClosed) ctx.closePath();
+
+    ctx.fillStyle = fillColor;
+    ctx.fill();
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    points.forEach((pt) => {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = strokeColor;
+      ctx.fill();
+    });
+  }
+
+  function drawLabel(text, points) {
+    let avgX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+    let avgY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
+    ctx.font = 'bold 12px sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(text, avgX, avgY);
+  }
+
+  function hexToRgba(hex, alpha) {
+    let c = hex.substring(1);
+    let rgb = parseInt(c, 16);
+    let r = (rgb >> 16) & 255;
+    let g = (rgb >> 8) & 255;
+    let b = rgb & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function updateMarkdown() {
+    let md = `# Sampaguita Dorm Cumulative Floorplan Coordinates\n\n`;
+    savedZones.forEach((zone, idx) => {
+      md += `### ${zone.name}\n`;
+      zone.points.forEach((pt, pIdx) => {
+        md += `* Corner ${pIdx + 1}: \`(${pt.x}, ${pt.y})\`\n`;
+      });
+      md += `\n`;
+    });
+    markdownOutput.value = md;
+  }
+
+  redraw();
+</script>
+</body>
+</html>
