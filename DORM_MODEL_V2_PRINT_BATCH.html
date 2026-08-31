@@ -229,7 +229,7 @@
     GF: [
       { cat: "admin", pts: [[517, 203], [556, 203], [556, 303], [517, 303]] },
       { cat: "admin", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
-      { cat: "admin", pts: [[478, 153], [517, 153], [517, 203], [478, 203]] },
+      { name: "DM Office", cat: "admin", pts: [[478, 153], [517, 153], [517, 203], [478, 203]] },
       { cat: "admin", pts: [[324, 241], [362, 241], [362, 274], [324, 274]] },
       { name: "X", cat: "empty", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
       { name: "X", cat: "empty", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
@@ -380,7 +380,20 @@
     }
 
     if (floor === "GF") {
-      if (roomName === "GF Lobby") {
+      if (roomName === "DM Office") {
+        exitName = "Main Entrance Exit";
+        distance = "~8 meters";
+        doorX = 497.5;
+        doorY = 203;
+        isTopRow = true;
+        path = [[497.5, 203], [497.5, 245], [556, 245]];
+        segments = [{ pts: path, is2F: false, hasArrow: true }];
+        steps = [
+          `Exit the DM Office downwards into the Ground Floor Lobby.`,
+          `Turn right towards the Main Entrance Door.`,
+          `Exit the building safely and proceed to a safe clearing/emergency holding area.`
+        ];
+      } else if (roomName === "GF Lobby") {
         exitName = "Main Entrance Exit"; distance = "~3 meters";
         path = [[rx, ry], [556, 253]];
         segments = [{ pts: path, is2F: false, hasArrow: true }];
@@ -669,7 +682,9 @@
 
     // ViewBox Cropping
     let cropViewBox = "50 50 960 400";
-    if (roomName.startsWith("D")) {
+    if (roomName === "DM Office") {
+      cropViewBox = "350 120 230 180";
+    } else if (roomName.startsWith("D")) {
       cropViewBox = "500 50 490 220";
     } else if (roomName.startsWith("C")) {
       if (res.exitName.includes("Fire Exit")) {
@@ -740,8 +755,8 @@
         zonesGroup.appendChild(x2);
       }
 
-      // Dorm Room Labels ONLY (Skip DM Office, Hallways, Stairwells, and non-dorm room labels)
-      const isResidentRoom = zone.name && /^(A|B|C|D)\d+$/.test(zone.name) && zone.cat !== "empty";
+      // Dorm Room Labels ONLY (Skip Hallways, Stairwells, and non-dorm room labels)
+      const isResidentRoom = zone.name && (/^(A|B|C|D)\d+$/.test(zone.name) || zone.name === "DM Office") && zone.cat !== "empty";
       if (isResidentRoom && zone.pts) {
         let labelX = zone.pts.reduce((sum, p) => sum + p[0], 0) / zone.pts.length;
         let labelY = zone.pts.reduce((sum, p) => sum + p[1], 0) / zone.pts.length;
@@ -890,7 +905,7 @@
 
     ["GF", "2F"].forEach(floor => {
       MODEL[floor].forEach(zone => {
-        if (zone.name && /^(A|B|C|D)\d+$/.test(zone.name)) {
+        if (zone.name && (/^(A|B|C|D)\d+$/.test(zone.name) || zone.name === "DM Office")) {
           if (zone.cat !== "empty") {
             roomList.push({ floor, roomName: zone.name });
           }
