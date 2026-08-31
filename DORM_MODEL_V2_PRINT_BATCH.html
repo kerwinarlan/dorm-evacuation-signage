@@ -237,7 +237,7 @@
       { name: "D15", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
       { name: "D14", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
       { name: "D13", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
-      { cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+      { name: "Boy's CR", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
       { name: "D12", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
       { name: "D11", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
       { name: "D10", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
@@ -259,7 +259,7 @@
       { name: "A12", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
       { name: "A13", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
       { name: "A14", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
-      { cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+      { name: "Girl's CR", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
       { name: "A15", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
       { name: "A16", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
       { name: "A26", cat: "empty", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
@@ -288,7 +288,7 @@
       { name: "C18", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
       { name: "C17", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
       { name: "C16", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
-      { cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
+      { name: "Boy's CR", cat: "utility", pts: [[710, 83], [787, 83], [787, 135], [710, 135]] },
       { name: "C15", cat: "boys", pts: [[787, 83], [825, 83], [825, 135], [787, 135]] },
       { name: "C14", cat: "boys", pts: [[825, 83], [864, 83], [864, 135], [825, 135]] },
       { name: "C13", cat: "boys", pts: [[864, 83], [903, 83], [903, 135], [864, 135]] },
@@ -310,7 +310,7 @@
       { name: "B14", cat: "girls", pts: [[440, 303], [478, 303], [478, 352], [440, 352]] },
       { name: "B15", cat: "girls", pts: [[401, 303], [440, 303], [440, 352], [401, 352]] },
       { name: "B16", cat: "girls", pts: [[362, 303], [401, 303], [401, 352], [362, 352]] },
-      { cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
+      { name: "Girl's CR", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
       { name: "B17", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
       { name: "B18", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
       { name: "B19", cat: "girls", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
@@ -778,8 +778,8 @@
         zonesGroup.appendChild(x2);
       }
 
-      // Dorm Room Labels ONLY (Skip non-dorm room labels like DM Office on resident cards)
-      const isResidentRoom = zone.name && /^(A|B|C|D)\d+$/.test(zone.name) && zone.cat !== "empty";
+      // Dorm Room Labels ONLY (Include CR and DM Office labels on cards)
+      const isResidentRoom = zone.name && (/^(A|B|C|D)\d+$/.test(zone.name) || zone.name === "DM Office" || zone.name.includes("CR")) && zone.cat !== "empty";
       const shouldDrawLabel = (roomName === "DM Office" && zone.name === "DM Office") || isResidentRoom;
 
       if (shouldDrawLabel && zone.pts) {
