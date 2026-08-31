@@ -89,10 +89,11 @@
   }
 
   .card-header p {
-    font-size: 11pt;
-    color: #444;
-    font-weight: bold;
-    margin-top: 2px;
+    font-size: 15pt;
+    color: #222222;
+    font-weight: 900;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
   }
 
   /* Main Body Layout Split: Large Left Map (75%) + Right Instructions Side Panel (25%) */
@@ -556,6 +557,21 @@
       }
     }
 
+    // Calculate exact path length in meters dynamically (1 SVG unit = 0.09 meters)
+    let totalLength = 0;
+    if (segments && segments.length > 0) {
+      segments.forEach(seg => {
+        for (let i = 0; i < seg.pts.length - 1; i++) {
+          const dx = seg.pts[i+1][0] - seg.pts[i][0];
+          const dy = seg.pts[i+1][1] - seg.pts[i][1];
+          totalLength += Math.hypot(dx, dy);
+        }
+      });
+    }
+    let meters = Math.round(totalLength * 0.09);
+    if (meters < 3) meters = 3;
+    distance = `~${meters} meters`;
+
     return { path, segments, exitName, distance, steps, rx, ry, doorX, doorY, floor, isTopRow };
   }
 
@@ -851,7 +867,7 @@
       });
     }
 
-    // Place "YOU ARE HERE" cat callout box with ears and whiskers OUTSIDE the room cell
+    // Place "YOU ARE HERE" cat speech bubble callout (matching Gemini cat badge) OUTSIDE room cell
     const targetRoom = MODEL[floor].find(z => z.name === roomName);
     if (res && targetRoom && targetRoom.pts) {
       const pinG = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -859,78 +875,78 @@
       const minY = Math.min(...targetRoom.pts.map(p => p[1]));
       const maxY = Math.max(...targetRoom.pts.map(p => p[1]));
 
-      // Position callout badge OUTSIDE the room cell (above top row rooms, below bottom row rooms)
-      const pinY = res.isTopRow ? minY - 18 : maxY + 18;
+      // Position callout badge OUTSIDE room cell (above top row, below bottom row)
+      const pinY = res.isTopRow ? minY - 20 : maxY + 20;
       const targetY = res.isTopRow ? minY : maxY;
-      const tailYBase = res.isTopRow ? pinY + 9 : pinY - 9;
+      const tailYBase = res.isTopRow ? pinY + 11 : pinY - 11;
 
       // Cat Ears on top of callout badge
-      const earYBase = pinY - 9;
-      const earYTip = earYBase - 8;
+      const earYBase = pinY - 11;
+      const earYTip = earYBase - 9;
 
       const leftEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      leftEar.setAttribute("points", `${doorX - 16},${earYBase} ${doorX - 11},${earYTip} ${doorX - 5},${earYBase}`);
+      leftEar.setAttribute("points", `${doorX - 18},${earYBase} ${doorX - 12},${earYTip} ${doorX - 5},${earYBase}`);
       leftEar.setAttribute("fill", "#ffffff");
       leftEar.setAttribute("stroke", "#111111");
-      leftEar.setAttribute("stroke-width", "1.2");
+      leftEar.setAttribute("stroke-width", "1.4");
       pinG.appendChild(leftEar);
 
       const rightEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      rightEar.setAttribute("points", `${doorX + 5},${earYBase} ${doorX + 11},${earYTip} ${doorX + 16},${earYBase}`);
+      rightEar.setAttribute("points", `${doorX + 5},${earYBase} ${doorX + 12},${earYTip} ${doorX + 18},${earYBase}`);
       rightEar.setAttribute("fill", "#ffffff");
       rightEar.setAttribute("stroke", "#111111");
-      rightEar.setAttribute("stroke-width", "1.2");
+      rightEar.setAttribute("stroke-width", "1.4");
       pinG.appendChild(rightEar);
 
       const leftInnerEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      leftInnerEar.setAttribute("points", `${doorX - 14},${earYBase} ${doorX - 11},${earYTip + 3} ${doorX - 7},${earYBase}`);
+      leftInnerEar.setAttribute("points", `${doorX - 16},${earYBase} ${doorX - 12},${earYTip + 3} ${doorX - 7},${earYBase}`);
       leftInnerEar.setAttribute("fill", "#ffeef0");
       pinG.appendChild(leftInnerEar);
 
       const rightInnerEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      rightInnerEar.setAttribute("points", `${doorX + 7},${earYBase} ${doorX + 11},${earYTip + 3} ${doorX + 14},${earYBase}`);
+      rightInnerEar.setAttribute("points", `${doorX + 7},${earYBase} ${doorX + 12},${earYTip + 3} ${doorX + 16},${earYBase}`);
       rightInnerEar.setAttribute("fill", "#ffeef0");
       pinG.appendChild(rightInnerEar);
 
-      // Pointer tail triangle pointing to the outside room border
+      // Pointer tail triangle pointing to outside room border
       const tail = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      tail.setAttribute("points", `${doorX - 4},${tailYBase} ${doorX},${targetY} ${doorX + 4},${tailYBase}`);
+      tail.setAttribute("points", `${doorX - 5},${tailYBase} ${doorX},${targetY} ${doorX + 5},${tailYBase}`);
       tail.setAttribute("fill", "#ffffff");
       tail.setAttribute("stroke", "#111111");
-      tail.setAttribute("stroke-width", "1.2");
+      tail.setAttribute("stroke-width", "1.4");
       pinG.appendChild(tail);
 
-      // Callout rounded oval badge
+      // Callout rounded oval badge body
       const badgeBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      badgeBg.setAttribute("x", doorX - 22);
-      badgeBg.setAttribute("y", pinY - 9);
-      badgeBg.setAttribute("width", "44");
-      badgeBg.setAttribute("height", "18");
-      badgeBg.setAttribute("rx", "9");
+      badgeBg.setAttribute("x", doorX - 25);
+      badgeBg.setAttribute("y", pinY - 11);
+      badgeBg.setAttribute("width", "50");
+      badgeBg.setAttribute("height", "22");
+      badgeBg.setAttribute("rx", "11");
       badgeBg.setAttribute("fill", "#ffffff");
       badgeBg.setAttribute("stroke", "#111111");
-      badgeBg.setAttribute("stroke-width", "1.4");
+      badgeBg.setAttribute("stroke-width", "1.6");
       pinG.appendChild(badgeBg);
 
-      // Cat Whiskers (3 lines on left, 3 lines on right)
-      [[-3, -5], [0, 0], [3, 5]].forEach(([yOff, dy]) => {
+      // Cat Whiskers (3 angled lines on left, 3 on right)
+      [[-4, -6], [0, 0], [4, 6]].forEach(([yOff, dy]) => {
         const wLeft = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        wLeft.setAttribute("x1", (doorX - 22).toString());
+        wLeft.setAttribute("x1", (doorX - 25).toString());
         wLeft.setAttribute("y1", (pinY + yOff).toString());
-        wLeft.setAttribute("x2", (doorX - 30).toString());
+        wLeft.setAttribute("x2", (doorX - 36).toString());
         wLeft.setAttribute("y2", (pinY + yOff + dy).toString());
         wLeft.setAttribute("stroke", "#111111");
-        wLeft.setAttribute("stroke-width", "1");
+        wLeft.setAttribute("stroke-width", "1.2");
         wLeft.setAttribute("stroke-linecap", "round");
         pinG.appendChild(wLeft);
 
         const wRight = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        wRight.setAttribute("x1", (doorX + 22).toString());
+        wRight.setAttribute("x1", (doorX + 25).toString());
         wRight.setAttribute("y1", (pinY + yOff).toString());
-        wRight.setAttribute("x2", (doorX + 30).toString());
+        wRight.setAttribute("x2", (doorX + 36).toString());
         wRight.setAttribute("y2", (pinY + yOff + dy).toString());
         wRight.setAttribute("stroke", "#111111");
-        wRight.setAttribute("stroke-width", "1");
+        wRight.setAttribute("stroke-width", "1.2");
         wRight.setAttribute("stroke-linecap", "round");
         pinG.appendChild(wRight);
       });
@@ -938,8 +954,8 @@
       // Stacked dark text inside callout badge
       const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
       txt1.setAttribute("x", doorX);
-      txt1.setAttribute("y", pinY - 2.5);
-      txt1.setAttribute("font-size", "4.8px");
+      txt1.setAttribute("y", pinY - 3);
+      txt1.setAttribute("font-size", "5px");
       txt1.setAttribute("font-weight", "900");
       txt1.setAttribute("fill", "#111111");
       txt1.textContent = "YOU ARE";
@@ -947,8 +963,8 @@
 
       const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
       txt2.setAttribute("x", doorX);
-      txt2.setAttribute("y", pinY + 3.5);
-      txt2.setAttribute("font-size", "5.8px");
+      txt2.setAttribute("y", pinY + 4);
+      txt2.setAttribute("font-size", "6px");
       txt2.setAttribute("font-weight", "900");
       txt2.setAttribute("fill", "#111111");
       txt2.textContent = "HERE";
@@ -957,29 +973,29 @@
       pinsGroup.appendChild(pinG);
     }
 
-    // Place Fire Exit Signs at emergency exits / stairwells
+    // Place Fire Exit Signs OUTSIDE doorways so they do NOT cover terminal path arrowheads
     if (floor === "GF") {
       if (roomName.startsWith("D") || roomName === "DM Office") {
-        renderFireExitSign(pinsGroup, 960, 178);
-        renderFireExitSign(pinsGroup, 556, 245);
+        renderFireExitSign(pinsGroup, 960, 210);
+        renderFireExitSign(pinsGroup, 556, 280);
       } else if (roomName.startsWith("A")) {
-        renderFireExitSign(pinsGroup, 111, 395);
-        renderFireExitSign(pinsGroup, 556, 245);
+        renderFireExitSign(pinsGroup, 111, 428);
+        renderFireExitSign(pinsGroup, 556, 280);
       }
     } else {
       if (roomName.startsWith("C")) {
         if (res.exitName.includes("Fire Exit")) {
-          renderFireExitSign(pinsGroup, 960, 109);
+          renderFireExitSign(pinsGroup, 960, 78);
         } else {
-          renderFireExitSign(pinsGroup, 546, 344);
-          renderFireExitSign(pinsGroup, 556, 245);
+          renderFireExitSign(pinsGroup, 585, 344);
+          renderFireExitSign(pinsGroup, 556, 280);
         }
       } else if (roomName.startsWith("B")) {
         if (res.exitName.includes("Fire Exit")) {
-          renderFireExitSign(pinsGroup, 111, 327);
+          renderFireExitSign(pinsGroup, 111, 298);
         } else {
-          renderFireExitSign(pinsGroup, 546, 344);
-          renderFireExitSign(pinsGroup, 556, 245);
+          renderFireExitSign(pinsGroup, 585, 344);
+          renderFireExitSign(pinsGroup, 556, 280);
         }
       }
     }
