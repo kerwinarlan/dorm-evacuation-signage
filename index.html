@@ -774,14 +774,15 @@
       }
     });
 
-    // Draw thick solid highlight box for current target room ON TOP of all zones so no adjacent cell overlaps it
+    // Draw thick solid black pen highlight box for current target room ON TOP of all zones so its borders stand out
     const activeZone = model.find(z => z.name === roomName);
     if (activeZone && activeZone.pts) {
       const targetBox = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       targetBox.setAttribute("points", activeZone.pts.map(p => p.join(",")).join(" "));
       targetBox.setAttribute("fill", "none");
-      targetBox.setAttribute("stroke", "#dc2626");
-      targetBox.setAttribute("stroke-width", "3.5");
+      targetBox.setAttribute("stroke", "#000000");
+      targetBox.setAttribute("stroke-width", "4.5");
+      targetBox.setAttribute("stroke-linejoin", "miter");
       zonesGroup.appendChild(targetBox);
     }
 
