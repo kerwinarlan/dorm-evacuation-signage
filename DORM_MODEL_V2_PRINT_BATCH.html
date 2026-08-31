@@ -285,7 +285,7 @@
       { name: "Girl's CR", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
       { name: "A15", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
       { name: "A16", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
-      { name: "A26", cat: "girls", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+      { cat: "empty", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
       { name: "A17", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
       { cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
       { cat: "admin", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
@@ -784,23 +784,7 @@
       }
       zonesGroup.appendChild(shapeEl);
 
-      // Empty Room X (Faint gray cross line)
-      if (zone.cat === "empty") {
-        const minX = Math.min(...zone.pts.map(p => p[0])); const maxX = Math.max(...zone.pts.map(p => p[0]));
-        const minY = Math.min(...zone.pts.map(p => p[1])); const maxY = Math.max(...zone.pts.map(p => p[1]));
 
-        const x1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        x1.setAttribute("x1", minX + 4); x1.setAttribute("y1", minY + 4);
-        x1.setAttribute("x2", maxX - 4); x1.setAttribute("y2", maxY - 4);
-        x1.setAttribute("stroke", "#cbd5e1"); x1.setAttribute("stroke-width", "0.8");
-        zonesGroup.appendChild(x1);
-
-        const x2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        x2.setAttribute("x1", maxX - 4); x2.setAttribute("y1", minY + 4);
-        x2.setAttribute("x2", minX + 4); x2.setAttribute("y2", maxY - 4);
-        x2.setAttribute("stroke", "#cbd5e1"); x2.setAttribute("stroke-width", "0.8");
-        zonesGroup.appendChild(x2);
-      }
 
       // Dorm Room Labels ONLY (Include CR and DM Office labels on cards)
       const isResidentRoom = zone.name && (/^(A|B|C|D)\d+$/.test(zone.name) || zone.name === "DM Office" || zone.name.includes("CR")) && zone.cat !== "empty";

@@ -274,8 +274,8 @@
       { name: "Main Assembly Hall", cat: "admin", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
       { name: "DM Office", cat: "admin", pts: [[478, 153], [517, 153], [517, 203], [478, 203]] },
       { name: "Laundry", cat: "admin", pts: [[324, 241], [362, 241], [362, 274], [324, 274]] },
-      { name: "X", cat: "empty", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
-      { name: "X", cat: "empty", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+      { cat: "empty", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+      { cat: "empty", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
       { name: "D15", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
       { name: "D14", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
       { name: "D13", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
@@ -294,7 +294,7 @@
       { name: "D7", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
       { name: "D8", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
       { name: "D9", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
-      { name: "X", cat: "empty", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+      { cat: "empty", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
       { name: "Boys Fire Exit", cat: "hall", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
       { name: "Corridor D Hallway", cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
       { name: "A11", cat: "empty", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
@@ -304,7 +304,7 @@
       { name: "Girls T&B", cat: "utility", pts: [[285, 303], [362, 303], [362, 352], [285, 352]] },
       { name: "A15", cat: "girls", pts: [[247, 303], [285, 303], [285, 352], [247, 352]] },
       { name: "A16", cat: "girls", pts: [[208, 303], [247, 303], [247, 352], [208, 352]] },
-      { name: "A26", cat: "empty", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
+      { cat: "empty", pts: [[170, 303], [208, 303], [208, 352], [170, 352]] },
       { name: "A17", cat: "girls", pts: [[131, 303], [170, 303], [170, 352], [131, 352]] },
       { name: "Girls Stairwell", cat: "hall", pts: [[91, 303], [131, 303], [131, 352], [91, 352]] },
       { name: "PsychServ", cat: "admin", pts: [[131, 370], [170, 370], [170, 420], [131, 420]] },
@@ -618,25 +618,7 @@
       shapeEl.setAttribute("stroke-width", "1.5");
       zonesGroup.appendChild(shapeEl);
 
-      // Empty Room X
-      if (zone.cat === "empty") {
-        const minX = Math.min(...zone.pts.map(p => p[0]));
-        const maxX = Math.max(...zone.pts.map(p => p[0]));
-        const minY = Math.min(...zone.pts.map(p => p[1]));
-        const maxY = Math.max(...zone.pts.map(p => p[1]));
 
-        const x1 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        x1.setAttribute("x1", minX + 4); x1.setAttribute("y1", minY + 4);
-        x1.setAttribute("x2", maxX - 4); x1.setAttribute("y2", maxY - 4);
-        x1.setAttribute("stroke", "#ff4d4d"); x1.setAttribute("stroke-width", "2");
-        zonesGroup.appendChild(x1);
-
-        const x2 = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        x2.setAttribute("x1", maxX - 4); x2.setAttribute("y1", minY + 4);
-        x2.setAttribute("x2", minX + 4); x2.setAttribute("y2", maxY - 4);
-        x2.setAttribute("stroke", "#ff4d4d"); x2.setAttribute("stroke-width", "2");
-        zonesGroup.appendChild(x2);
-      }
 
       // Labels
       if (zone.name) {
