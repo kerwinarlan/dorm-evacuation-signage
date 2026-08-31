@@ -1,4 +1,4 @@
-# Sampaguita Residence Hall: Master Masterplan & Prompt Context (AY 2025–2026)
+# Residence Hall: Master Masterplan & Prompt Context (AY 2025–2026)
 
 > **Purpose:** Feed this exact context to ChatGPT or Hermes to generate complete presentation slide decks, Canva layouts, event scripts, pubmats, or policy documents without missing any operational or event details.
 
@@ -7,7 +7,7 @@
 ## 1. General Dorm Information & Admin Operations
 
 ### Dorm Details
-* **Entity:** Sampaguita Residence Hall (Sampa)
+* **Entity:** Residence Hall ([DORM NAME])
 * **Target Term:** Second Semester, A.Y. 2025–2026
 * **Population Size:** ~186 Dormers
 
@@ -36,8 +36,8 @@
   * Corridor Group Chats (per floor/hallway)
 
 ### Announcements Schedule & Onboarding
-1. **First Announcement:** Sampa Primer, Sampa QR, Sampa Main GC.
-2. **Second Announcement:** Concise breakdown of "Management Behind Sampa".
+1. **First Announcement:** Dorm Primer, Dorm QR, Main Community GC.
+2. **Second Announcement:** Concise breakdown of "Management Behind Dorm".
 3. **Third Announcement:** Links to specialized GCs (Laundry, Ate Ken, etc.).
 
 ### Operations & Curfew Rules

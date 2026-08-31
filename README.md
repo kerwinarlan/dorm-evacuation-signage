@@ -91,18 +91,18 @@ This system solves the problem by dynamically generating personalized room-level
 ```
 .
 ├── index.html                           # Main Print-Batch Generator & PDF Signage Application
-├── SAMPAGUITA_MODEL_V2_PRINT_BATCH.html # Primary A4 Landscape Batch Generator
+├── DORM_MODEL_V2_PRINT_BATCH.html       # Primary A4 Landscape Batch Generator
 ├── EVACUATION_SIGNAGE_PIPELINE.html     # Interactive Egress Simulator & Pathfinding Pipeline
-├── SAMPAGUITA_MODEL_V1.html             # Single Card Signage Model (V1)
-├── SAMPAGUITA_FLOORPLANS.html           # Full Floorplan Visualizer (GF & 2F)
+├── DORM_MODEL_V1.html                   # Single Card Signage Model (V1)
+├── DORM_FLOORPLANS.html                 # Full Floorplan Visualizer (GF & 2F)
 ├── FLOORPLAN_MAPPER.html               # Interactive Coordinate Mapper & Zone Plotter
 ├── FLOORPLAN_COORDINATES_TEMPLATE.md    # Coordinate Mapping Reference Guide
-├── SAMPA_MASTERPLAN_2026.md             # Dormitory Safety Masterplan
+├── DORM_MASTERPLAN_2026.md              # Dormitory Safety Masterplan
 ├── TRANSPOSED_GF_MODEL.md               # Ground Floor Vector Geometry Reference
 ├── TRANSPOSED_2F_MODEL.md               # Second Floor Vector Geometry Reference
 ├── VISUALIZE_GF.html                    # Ground Floor Vector Visualizer
 ├── VISUALIZE_2F.html                    # Second Floor Vector Visualizer
-└── Sampa-logo.png                       # Dormitory Seal Reference Asset
+└── dorm-logo.png                        # Dormitory Seal Reference Asset
 ```
 
 ---
@@ -111,7 +111,7 @@ This system solves the problem by dynamically generating personalized room-level
 
 ### 1. View & Print Resident Room Signage (PDF)
 
-1. Open `index.html` in any modern web browser (Chrome, Edge, Safari, Firefox).
+1. Open `index.html` or `DORM_MODEL_V2_PRINT_BATCH.html` in any modern web browser (Chrome, Edge, Safari, Firefox).
 2. Click the **🖨 Print Resident Room Signage (PDF)** button at the top right (or press `Ctrl+P` / `Cmd+P`).
 3. In the browser print dialog:
    - **Destination**: *Save as PDF*
