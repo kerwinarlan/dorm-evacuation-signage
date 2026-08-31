@@ -232,8 +232,8 @@
       { cat: "admin", pts: [[362, 135], [517, 135], [517, 303], [362, 303]] },
       { name: "DM Office", cat: "admin", pts: [[478, 153], [517, 153], [517, 203], [478, 203]] },
       { cat: "admin", pts: [[324, 241], [362, 241], [362, 274], [324, 274]] },
-      { name: "X", cat: "empty", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
-      { name: "X", cat: "empty", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
+      { name: "D16", cat: "boys", pts: [[517, 83], [556, 83], [556, 135], [517, 135]] },
+      { name: "D15-A", cat: "boys", pts: [[556, 83], [594, 83], [594, 135], [556, 135]] },
       { name: "D15", cat: "boys", pts: [[594, 83], [633, 83], [633, 135], [594, 135]] },
       { name: "D14", cat: "boys", pts: [[633, 83], [671, 83], [671, 135], [633, 135]] },
       { name: "D13", cat: "boys", pts: [[671, 83], [710, 83], [710, 135], [671, 135]] },
@@ -252,7 +252,7 @@
       { name: "D7", cat: "boys", pts: [[787, 153], [825, 153], [825, 203], [787, 203]] },
       { name: "D8", cat: "boys", pts: [[825, 153], [864, 153], [864, 203], [825, 203]] },
       { name: "D9", cat: "boys", pts: [[864, 153], [903, 153], [903, 203], [864, 203]] },
-      { name: "X", cat: "empty", pts: [[903, 153], [941, 153], [941, 203], [903, 203]] },
+      { name: "D18", cat: "boys", pts: [[903, 153], [941, 153], [941, 203], [903, 153]] },
       { cat: "hall", pts: [[941, 153], [979, 153], [979, 203], [941, 203]] },
       { cat: "hall", pts: [[517, 135], [979, 135], [979, 153], [556, 153], [556, 203], [517, 203]] },
       { name: "A11", cat: "empty", pts: [[478, 303], [517, 303], [517, 352], [478, 352]] },
@@ -778,9 +778,10 @@
         zonesGroup.appendChild(x2);
       }
 
-      // Dorm Room Labels ONLY (Include CR and DM Office labels on cards)
-      const isResidentRoom = zone.name && (/^(A|B|C|D)\d+$/.test(zone.name) || zone.name === "DM Office" || zone.name.includes("CR")) && zone.cat !== "empty";
-      const shouldDrawLabel = (roomName === "DM Office" && zone.name === "DM Office") || isResidentRoom;
+      // Dorm Room Labels (Skip DM Office label on resident room cards)
+      const isResidentRoom = zone.name && (/^[ABCD]\d+(-[A-Z])?$/.test(zone.name) || zone.name.includes("CR"));
+      const isDM = (roomName === "DM Office" && zone.name === "DM Office");
+      const shouldDrawLabel = isResidentRoom || isDM;
 
       if (shouldDrawLabel && zone.pts) {
         let labelX = zone.pts.reduce((sum, p) => sum + p[0], 0) / zone.pts.length;
