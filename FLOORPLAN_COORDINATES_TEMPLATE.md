@@ -1,4 +1,4 @@
-# Sampaguita Dormitory Floorplan Coordinate Template
+# Dormitory Floorplan Coordinate Template
 
 Use this Markdown template to define rooms, zones, and spatial layouts for Canva or web map rendering.
 

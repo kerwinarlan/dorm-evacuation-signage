@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sampaguita Interactive Floorplan Coordinate Input & Cumulative Zone Plotter</title>
+<title>Interactive Floorplan Coordinate Input & Cumulative Zone Plotter</title>
 <style>
   :root {
     --bg-color: #0f1117;
@@ -486,7 +486,7 @@
   }
 
   function updateMarkdown() {
-    let md = `# Sampaguita Dorm Cumulative Floorplan Coordinates\n\n`;
+    let md = `# Dorm Cumulative Floorplan Coordinates\n\n`;
     savedZones.forEach((zone, idx) => {
       md += `### ${zone.name}\n`;
       zone.points.forEach((pt, pIdx) => {
