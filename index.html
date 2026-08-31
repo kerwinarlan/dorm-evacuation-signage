@@ -867,7 +867,7 @@
       });
     }
 
-    // Place "YOU ARE HERE" cat speech bubble callout (matching Gemini cat badge) OUTSIDE room cell
+    // Place "YOU ARE HERE" cat speech bubble callout (matching Gemini cat bubble shape) OUTSIDE room cell
     const targetRoom = MODEL[floor].find(z => z.name === roomName);
     if (res && targetRoom && targetRoom.pts) {
       const pinG = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -878,55 +878,55 @@
       // Position callout badge OUTSIDE room cell (above top row, below bottom row)
       const pinY = res.isTopRow ? minY - 20 : maxY + 20;
       const targetY = res.isTopRow ? minY : maxY;
-      const tailYBase = res.isTopRow ? pinY + 11 : pinY - 11;
 
-      // Cat Ears on top of callout badge
-      const earYBase = pinY - 11;
-      const earYTip = earYBase - 9;
+      // Single continuous cat speech bubble path (ears + body + tail pointer)
+      const catPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      let d = "";
+      if (res.isTopRow) {
+        // Tail points DOWN to top room border (targetY)
+        d = `
+          M ${doorX - 5},${pinY + 11}
+          L ${doorX},${targetY}
+          L ${doorX + 5},${pinY + 11}
+          L ${doorX + 15},${pinY + 11}
+          Q ${doorX + 25},${pinY + 11} ${doorX + 25},${pinY}
+          Q ${doorX + 25},${pinY - 11} ${doorX + 18},${pinY - 11}
+          L ${doorX + 12},${pinY - 21}
+          L ${doorX + 5},${pinY - 11}
+          L ${doorX - 5},${pinY - 11}
+          L ${doorX - 12},${pinY - 21}
+          L ${doorX - 18},${pinY - 11}
+          Q ${doorX - 25},${pinY - 11} ${doorX - 25},${pinY}
+          Q ${doorX - 25},${pinY + 11} ${doorX - 15},${pinY + 11}
+          Z
+        `.replace(/\s+/g, " ");
+      } else {
+        // Tail points UP to bottom room border (targetY)
+        d = `
+          M ${doorX - 5},${pinY - 11}
+          L ${doorX},${targetY}
+          L ${doorX + 5},${pinY - 11}
+          L ${doorX + 15},${pinY - 11}
+          Q ${doorX + 25},${pinY - 11} ${doorX + 25},${pinY}
+          Q ${doorX + 25},${pinY + 11} ${doorX + 18},${pinY + 11}
+          L ${doorX + 12},${pinY + 21}
+          L ${doorX + 5},${pinY + 11}
+          L ${doorX - 5},${pinY + 11}
+          L ${doorX - 12},${pinY + 21}
+          L ${doorX - 18},${pinY + 11}
+          Q ${doorX - 25},${pinY + 11} ${doorX - 25},${pinY}
+          Q ${doorX - 25},${pinY - 11} ${doorX - 15},${pinY - 11}
+          Z
+        `.replace(/\s+/g, " ");
+      }
 
-      const leftEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      leftEar.setAttribute("points", `${doorX - 18},${earYBase} ${doorX - 12},${earYTip} ${doorX - 5},${earYBase}`);
-      leftEar.setAttribute("fill", "#ffffff");
-      leftEar.setAttribute("stroke", "#111111");
-      leftEar.setAttribute("stroke-width", "1.4");
-      pinG.appendChild(leftEar);
-
-      const rightEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      rightEar.setAttribute("points", `${doorX + 5},${earYBase} ${doorX + 12},${earYTip} ${doorX + 18},${earYBase}`);
-      rightEar.setAttribute("fill", "#ffffff");
-      rightEar.setAttribute("stroke", "#111111");
-      rightEar.setAttribute("stroke-width", "1.4");
-      pinG.appendChild(rightEar);
-
-      const leftInnerEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      leftInnerEar.setAttribute("points", `${doorX - 16},${earYBase} ${doorX - 12},${earYTip + 3} ${doorX - 7},${earYBase}`);
-      leftInnerEar.setAttribute("fill", "#ffeef0");
-      pinG.appendChild(leftInnerEar);
-
-      const rightInnerEar = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      rightInnerEar.setAttribute("points", `${doorX + 7},${earYBase} ${doorX + 12},${earYTip + 3} ${doorX + 16},${earYBase}`);
-      rightInnerEar.setAttribute("fill", "#ffeef0");
-      pinG.appendChild(rightInnerEar);
-
-      // Pointer tail triangle pointing to outside room border
-      const tail = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      tail.setAttribute("points", `${doorX - 5},${tailYBase} ${doorX},${targetY} ${doorX + 5},${tailYBase}`);
-      tail.setAttribute("fill", "#ffffff");
-      tail.setAttribute("stroke", "#111111");
-      tail.setAttribute("stroke-width", "1.4");
-      pinG.appendChild(tail);
-
-      // Callout rounded oval badge body
-      const badgeBg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      badgeBg.setAttribute("x", doorX - 25);
-      badgeBg.setAttribute("y", pinY - 11);
-      badgeBg.setAttribute("width", "50");
-      badgeBg.setAttribute("height", "22");
-      badgeBg.setAttribute("rx", "11");
-      badgeBg.setAttribute("fill", "#ffffff");
-      badgeBg.setAttribute("stroke", "#111111");
-      badgeBg.setAttribute("stroke-width", "1.6");
-      pinG.appendChild(badgeBg);
+      catPath.setAttribute("d", d);
+      catPath.setAttribute("fill", "#ffffff");
+      catPath.setAttribute("stroke", "#111111");
+      catPath.setAttribute("stroke-width", "1.6");
+      catPath.setAttribute("stroke-linejoin", "round");
+      catPath.setAttribute("stroke-linecap", "round");
+      pinG.appendChild(catPath);
 
       // Cat Whiskers (3 angled lines on left, 3 on right)
       [[-4, -6], [0, 0], [4, 6]].forEach(([yOff, dy]) => {
@@ -953,18 +953,18 @@
 
       // Stacked dark text inside callout badge
       const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt1.setAttribute("x", doorX);
-      txt1.setAttribute("y", pinY - 3);
-      txt1.setAttribute("font-size", "5px");
+      txt1.setAttribute("x", doorX.toString());
+      txt1.setAttribute("y", (pinY - 2.5).toString());
+      txt1.setAttribute("font-size", "4.8px");
       txt1.setAttribute("font-weight", "900");
       txt1.setAttribute("fill", "#111111");
       txt1.textContent = "YOU ARE";
       pinG.appendChild(txt1);
 
       const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt2.setAttribute("x", doorX);
-      txt2.setAttribute("y", pinY + 4);
-      txt2.setAttribute("font-size", "6px");
+      txt2.setAttribute("x", doorX.toString());
+      txt2.setAttribute("y", (pinY + 4.5).toString());
+      txt2.setAttribute("font-size", "5.8px");
       txt2.setAttribute("font-weight", "900");
       txt2.setAttribute("fill", "#111111");
       txt2.textContent = "HERE";
