@@ -734,7 +734,7 @@
 
       shapeEl.setAttribute("fill", style.fill);
       shapeEl.setAttribute("stroke", style.stroke || "#111111");
-      shapeEl.setAttribute("stroke-width", "1.2");
+      shapeEl.setAttribute("stroke-width", "0.8");
       zonesGroup.appendChild(shapeEl);
 
       // Empty Room X (Faint gray cross line)
@@ -774,14 +774,14 @@
       }
     });
 
-    // Draw thick solid black highlight box for current target room ON TOP of all zones so its borders stand out sharply
+    // Draw thick solid black highlight box for current target room ON TOP of all zones (4x thicker than other rooms)
     const activeZone = model.find(z => z.name === roomName);
     if (activeZone && activeZone.pts) {
       const targetBox = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       targetBox.setAttribute("points", activeZone.pts.map(p => p.join(",")).join(" "));
       targetBox.setAttribute("fill", "none");
       targetBox.setAttribute("stroke", "#000000");
-      targetBox.setAttribute("stroke-width", "4.0");
+      targetBox.setAttribute("stroke-width", "3.2");
       targetBox.setAttribute("stroke-linejoin", "miter");
       zonesGroup.appendChild(targetBox);
     }
