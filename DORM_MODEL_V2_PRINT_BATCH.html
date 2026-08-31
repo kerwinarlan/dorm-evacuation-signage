@@ -53,20 +53,43 @@
   .signage-page {
     width: 297mm;
     height: 210mm;
+    box-sizing: border-box;
     background: #ffffff;
-    padding: 12mm;
+    padding: 10mm 12mm;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     page-break-after: always;
+    page-break-inside: avoid;
     border: 1px solid #ccc;
+    overflow: hidden;
   }
 
   @media print {
-    body { background: white; padding: 0; }
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    html, body {
+      background: white;
+      padding: 0;
+      margin: 0;
+      width: 297mm;
+      height: 210mm;
+    }
     .screen-controls { display: none; }
-    .signage-page { box-shadow: none; border: none; width: 100%; height: 100%; page-break-after: always; }
+    .signage-page {
+      box-shadow: none;
+      border: none;
+      width: 297mm;
+      height: 210mm;
+      padding: 10mm 12mm;
+      box-sizing: border-box;
+      page-break-after: always;
+      page-break-inside: avoid;
+      overflow: hidden;
+    }
   }
 
   /* Header */
@@ -419,15 +442,6 @@
           `Proceed straight East through the Assembly Hall into the Lobby.`,
           `Evacuate RIGHT (East) out through the Main Entrance Door.`
         ];
-      } else if (roomName === "DM Office") {
-        exitName = "Main Entrance Exit"; distance = "~10 meters";
-        path = [[rx, ry], [497, 253], [556, 253]];
-        segments = [{ pts: path, is2F: false, hasArrow: true }];
-        steps = [
-          `Exit DM Office DOWN into the Lobby.`,
-          `Turn RIGHT (East) towards the Main Entrance Door.`,
-          `Evacuate out through the Main Entrance Door on the right.`
-        ];
       } else if (roomName.startsWith("D")) {
         if (rx > 780) {
           exitName = "Boys Wing Fire Exit"; distance = "~12 meters";
@@ -447,7 +461,7 @@
           steps = [
             `Turn ${turnDir} from your room going to the hallway.`,
             `Turn left at the end of the hallway towards the guard's desk and main entrance.`,
-            `Exit the building safely and proceed to a safe clearing/emergency holding area.`
+            `Exit through the main entrance door on your left to the safe clearing area.`
           ];
         }
       } else {
@@ -461,6 +475,15 @@
             `Proceed straight to the end of the hallway towards the Fire Exit door.`,
             `Exit the building safely and proceed to a safe clearing/emergency holding area.`
           ];
+        } else if (roomName === "A10" || roomName === "B12") {
+          exitName = "Main Entrance Exit"; distance = "~16 meters";
+          path = [[doorX, doorY], [536, 361], [536, 245], [556, 245]];
+          segments = [{ pts: path, is2F: false, hasArrow: true }];
+          steps = [
+            `Exit your room and proceed straight across the hallway into the lobby.`,
+            `Proceed straight towards the guard's desk and main entrance.`,
+            `Exit through the main entrance door to the outdoor assembly area.`
+          ];
         } else {
           exitName = "Main Entrance Exit"; distance = "~20 meters";
           path = [[doorX, doorY], [doorX, 361], [536, 361], [536, 245], [556, 245]];
@@ -468,8 +491,8 @@
           const turnDir = isTopRow ? "left" : "right";
           steps = [
             `Turn ${turnDir} from your room going to the hallway.`,
-            `Turn right at the end of the hallway towards the guard's desk and main entrance.`,
-            `Exit the building safely and proceed to a safe clearing/emergency holding area.`
+            `Turn left at the end of the hallway towards the guard's desk and main entrance.`,
+            `Exit through the main entrance door on your right to the safe clearing area.`
           ];
         }
       }
@@ -575,98 +598,54 @@
     return { path, segments, exitName, distance, steps, rx, ry, doorX, doorY, floor, isTopRow };
   }
 
-  function renderFireExitSign(svgGroup, x, y, isVertical = false) {
+  function renderFireExitSign(svgGroup, x, y, angle = 0) {
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-
-    if (isVertical) {
-      // Lengthwise / Vertical Fire Exit Sign placed outside lobby entrance
-      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", x - 10); rect.setAttribute("y", y - 23);
-      rect.setAttribute("width", "20"); rect.setAttribute("height", "46");
-      rect.setAttribute("rx", "3"); rect.setAttribute("fill", "#e2c044");
-      rect.setAttribute("stroke", "#111111"); rect.setAttribute("stroke-width", "1.2");
-      g.appendChild(rect);
-
-      const innerRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      innerRect.setAttribute("x", x - 8); innerRect.setAttribute("y", y - 21);
-      innerRect.setAttribute("width", "16"); innerRect.setAttribute("height", "42");
-      innerRect.setAttribute("rx", "2"); innerRect.setAttribute("fill", "none");
-      innerRect.setAttribute("stroke", "#111111"); innerRect.setAttribute("stroke-width", "0.8");
-      g.appendChild(innerRect);
-
-      const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt1.setAttribute("x", x); txt1.setAttribute("y", y - 12);
-      txt1.setAttribute("font-size", "5px"); txt1.setAttribute("font-weight", "900");
-      txt1.setAttribute("fill", "#111111"); txt1.textContent = "FIRE";
-      g.appendChild(txt1);
-
-      const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt2.setAttribute("x", x); txt2.setAttribute("y", y - 4);
-      txt2.setAttribute("font-size", "5px"); txt2.setAttribute("font-weight", "900");
-      txt2.setAttribute("fill", "#111111"); txt2.textContent = "EXIT";
-      g.appendChild(txt2);
-
-      const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      frame.setAttribute("x", x - 6); frame.setAttribute("y", y + 4);
-      frame.setAttribute("width", "12"); frame.setAttribute("height", "12");
-      frame.setAttribute("fill", "#111111");
-      g.appendChild(frame);
-
-      const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      head.setAttribute("cx", x); head.setAttribute("cy", y + 7);
-      head.setAttribute("r", "1.2"); head.setAttribute("fill", "#e2c044");
-      g.appendChild(head);
-
-      const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      body.setAttribute("d", `M ${x} ${y+8.5} L ${x-1} ${y+12} L ${x-3} ${y+15} M ${x-1} ${y+12} L ${x+2} ${y+15}`);
-      body.setAttribute("stroke", "#e2c044"); body.setAttribute("stroke-width", "0.9");
-      body.setAttribute("fill", "none");
-      g.appendChild(body);
-    } else {
-      // Horizontal Fire Exit Sign
-      const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      rect.setAttribute("x", x - 26); rect.setAttribute("y", y - 10);
-      rect.setAttribute("width", "52"); rect.setAttribute("height", "20");
-      rect.setAttribute("rx", "3"); rect.setAttribute("fill", "#e2c044");
-      rect.setAttribute("stroke", "#111111"); rect.setAttribute("stroke-width", "1.2");
-      g.appendChild(rect);
-
-      const innerRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      innerRect.setAttribute("x", x - 24); innerRect.setAttribute("y", y - 8);
-      innerRect.setAttribute("width", "48"); innerRect.setAttribute("height", "16");
-      innerRect.setAttribute("rx", "2"); innerRect.setAttribute("fill", "none");
-      innerRect.setAttribute("stroke", "#111111"); innerRect.setAttribute("stroke-width", "0.8");
-      g.appendChild(innerRect);
-
-      const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt1.setAttribute("x", x - 8); txt1.setAttribute("y", y - 2);
-      txt1.setAttribute("font-size", "5.5px"); txt1.setAttribute("font-weight", "900");
-      txt1.setAttribute("fill", "#111111"); txt1.textContent = "FIRE";
-      g.appendChild(txt1);
-
-      const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
-      txt2.setAttribute("x", x - 8); txt2.setAttribute("y", y + 4);
-      txt2.setAttribute("font-size", "5.5px"); txt2.setAttribute("font-weight", "900");
-      txt2.setAttribute("fill", "#111111"); txt2.textContent = "EXIT";
-      g.appendChild(txt2);
-
-      const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      frame.setAttribute("x", x + 8); frame.setAttribute("y", y - 6);
-      frame.setAttribute("width", "12"); frame.setAttribute("height", "12");
-      frame.setAttribute("fill", "#111111");
-      g.appendChild(frame);
-
-      const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      head.setAttribute("cx", x + 14); head.setAttribute("cy", y - 3);
-      head.setAttribute("r", "1.2"); head.setAttribute("fill", "#e2c044");
-      g.appendChild(head);
-
-      const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      body.setAttribute("d", `M ${x+14} ${y-1.5} L ${x+13} ${y+2} L ${x+10} ${y+5} M ${x+13} ${y+2} L ${x+16} ${y+5}`);
-      body.setAttribute("stroke", "#e2c044"); body.setAttribute("stroke-width", "0.9");
-      body.setAttribute("fill", "none");
-      g.appendChild(body);
+    if (angle) {
+      g.setAttribute("transform", `rotate(${angle}, ${x}, ${y})`);
     }
+
+    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    rect.setAttribute("x", x - 26); rect.setAttribute("y", y - 10);
+    rect.setAttribute("width", "52"); rect.setAttribute("height", "20");
+    rect.setAttribute("rx", "3"); rect.setAttribute("fill", "#e2c044");
+    rect.setAttribute("stroke", "#111111"); rect.setAttribute("stroke-width", "1.2");
+    g.appendChild(rect);
+
+    const innerRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    innerRect.setAttribute("x", x - 24); innerRect.setAttribute("y", y - 8);
+    innerRect.setAttribute("width", "48"); innerRect.setAttribute("height", "16");
+    innerRect.setAttribute("rx", "2"); innerRect.setAttribute("fill", "none");
+    innerRect.setAttribute("stroke", "#111111"); innerRect.setAttribute("stroke-width", "0.8");
+    g.appendChild(innerRect);
+
+    const txt1 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    txt1.setAttribute("x", x - 8); txt1.setAttribute("y", y - 2);
+    txt1.setAttribute("font-size", "5.5px"); txt1.setAttribute("font-weight", "900");
+    txt1.setAttribute("fill", "#111111"); txt1.textContent = "FIRE";
+    g.appendChild(txt1);
+
+    const txt2 = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    txt2.setAttribute("x", x - 8); txt2.setAttribute("y", y + 4);
+    txt2.setAttribute("font-size", "5.5px"); txt2.setAttribute("font-weight", "900");
+    txt2.setAttribute("fill", "#111111"); txt2.textContent = "EXIT";
+    g.appendChild(txt2);
+
+    const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    frame.setAttribute("x", x + 8); frame.setAttribute("y", y - 6);
+    frame.setAttribute("width", "12"); frame.setAttribute("height", "12");
+    frame.setAttribute("fill", "#111111");
+    g.appendChild(frame);
+
+    const head = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    head.setAttribute("cx", x + 14); head.setAttribute("cy", y - 3);
+    head.setAttribute("r", "1.2"); head.setAttribute("fill", "#e2c044");
+    g.appendChild(head);
+
+    const body = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    body.setAttribute("d", `M ${x+14} ${y-1.5} L ${x+13} ${y+2} L ${x+10} ${y+5} M ${x+13} ${y+2} L ${x+16} ${y+5}`);
+    body.setAttribute("stroke", "#e2c044"); body.setAttribute("stroke-width", "0.9");
+    body.setAttribute("fill", "none");
+    g.appendChild(body);
 
     svgGroup.appendChild(g);
   }
@@ -682,7 +661,7 @@
       <div class="signage-page">
         <div>
           <div class="card-header">
-            <img src="dorm-logo.png" style="height: 48px; width: auto;" alt="Sampaguita Logo" onerror="this.style.display='none'">
+            <img src="dorm-logo.png" style="height: 64px; width: auto;" alt="Sampaguita Logo" onerror="this.style.display='none'">
             <div>
               <h1>EMERGENCY EVACUATION PLAN</h1>
               <p>SAMPAGUITA RESIDENCE HALL • AY 2026-2027</p>
@@ -745,28 +724,28 @@
     if (!svgEl) return;
 
     // ViewBox Cropping with full headroom and footroom for cat ear callout badges and vertical exit signs
-    let cropViewBox = "50 20 960 440";
+    let cropViewBox = "20 20 1020 440";
     if (roomName === "DM Office") {
-      cropViewBox = "350 100 240 210";
+      cropViewBox = "360 85 360 200";
     } else if (roomName.startsWith("D")) {
-      cropViewBox = "500 20 500 260";
+      cropViewBox = "490 35 520 250";
     } else if (roomName.startsWith("C")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "500 20 500 260";
+        cropViewBox = "490 35 520 250";
       } else {
-        cropViewBox = "500 20 500 340";
+        cropViewBox = "490 35 520 330";
       }
     } else if (roomName.startsWith("A")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 210 500 250";
+        cropViewBox = "55 170 535 295";
       } else {
-        cropViewBox = "85 180 500 280";
+        cropViewBox = "55 170 535 295";
       }
     } else if (roomName.startsWith("B")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 210 500 250";
+        cropViewBox = "55 170 535 295";
       } else {
-        cropViewBox = "85 170 500 290";
+        cropViewBox = "55 170 535 295";
       }
     }
 
@@ -1018,29 +997,39 @@
       pinsGroup.appendChild(pinG);
     }
 
-    // Place Fire Exit Signs OUTSIDE doorways so they do NOT cover terminal path arrowheads
+    // Helper to render fire exit signs with automatic collision avoidance against the active room callout pin
+    const safeRenderFireExitSign = (svgGroup, x, y, angle = 0) => {
+      let finalX = x;
+      let finalY = y;
+      if (typeof doorX !== 'undefined' && typeof pinY !== 'undefined') {
+        if (Math.abs(x - doorX) < 55 && Math.abs(y - pinY) < 45) {
+          finalY = y + 50;
+        }
+      }
+      renderFireExitSign(svgGroup, finalX, finalY, angle);
+    };
+
+    // Place Fire Exit Signs OUTSIDE exterior building walls and doorways
     if (floor === "GF") {
       if (roomName.startsWith("D") || roomName === "DM Office") {
-        renderFireExitSign(pinsGroup, 960, 210);
-        renderFireExitSign(pinsGroup, 556, 280);
+        safeRenderFireExitSign(pinsGroup, 995, 178, 90);
+        safeRenderFireExitSign(pinsGroup, 570, 250, 0);
       } else if (roomName.startsWith("A")) {
-        renderFireExitSign(pinsGroup, 111, 428);
-        renderFireExitSign(pinsGroup, 556, 280);
+        safeRenderFireExitSign(pinsGroup, 76, 395, 90);
+        safeRenderFireExitSign(pinsGroup, 570, 250, 90);
       }
     } else {
       if (roomName.startsWith("C")) {
         if (res.exitName.includes("Fire Exit")) {
-          renderFireExitSign(pinsGroup, 960, 78);
+          safeRenderFireExitSign(pinsGroup, 995, 109, 90);
         } else {
-          renderFireExitSign(pinsGroup, 585, 344);
-          renderFireExitSign(pinsGroup, 556, 280);
+          safeRenderFireExitSign(pinsGroup, 570, 250, 0);
         }
       } else if (roomName.startsWith("B")) {
         if (res.exitName.includes("Fire Exit")) {
-          renderFireExitSign(pinsGroup, 111, 298);
+          safeRenderFireExitSign(pinsGroup, 76, 327, 90);
         } else {
-          renderFireExitSign(pinsGroup, 585, 344);
-          renderFireExitSign(pinsGroup, 556, 280);
+          safeRenderFireExitSign(pinsGroup, 570, 250, 90);
         }
       }
     }

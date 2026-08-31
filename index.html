@@ -53,20 +53,43 @@
   .signage-page {
     width: 297mm;
     height: 210mm;
+    box-sizing: border-box;
     background: #ffffff;
-    padding: 12mm;
+    padding: 10mm 12mm;
     box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     page-break-after: always;
+    page-break-inside: avoid;
     border: 1px solid #ccc;
+    overflow: hidden;
   }
 
   @media print {
-    body { background: white; padding: 0; }
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    html, body {
+      background: white;
+      padding: 0;
+      margin: 0;
+      width: 297mm;
+      height: 210mm;
+    }
     .screen-controls { display: none; }
-    .signage-page { box-shadow: none; border: none; width: 100%; height: 100%; page-break-after: always; }
+    .signage-page {
+      box-shadow: none;
+      border: none;
+      width: 297mm;
+      height: 210mm;
+      padding: 10mm 12mm;
+      box-sizing: border-box;
+      page-break-after: always;
+      page-break-inside: avoid;
+      overflow: hidden;
+    }
   }
 
   /* Header */
@@ -419,15 +442,6 @@
           `Proceed straight East through the Assembly Hall into the Lobby.`,
           `Evacuate RIGHT (East) out through the Main Entrance Door.`
         ];
-      } else if (roomName === "DM Office") {
-        exitName = "Main Entrance Exit"; distance = "~10 meters";
-        path = [[rx, ry], [497, 253], [556, 253]];
-        segments = [{ pts: path, is2F: false, hasArrow: true }];
-        steps = [
-          `Exit DM Office DOWN into the Lobby.`,
-          `Turn RIGHT (East) towards the Main Entrance Door.`,
-          `Evacuate out through the Main Entrance Door on the right.`
-        ];
       } else if (roomName.startsWith("D")) {
         if (rx > 780) {
           exitName = "Boys Wing Fire Exit"; distance = "~12 meters";
@@ -447,7 +461,7 @@
           steps = [
             `Turn ${turnDir} from your room going to the hallway.`,
             `Turn left at the end of the hallway towards the guard's desk and main entrance.`,
-            `Exit the building safely and proceed to a safe clearing/emergency holding area.`
+            `Exit through the main entrance door on your left to the safe clearing area.`
           ];
         }
       } else {
@@ -461,6 +475,15 @@
             `Proceed straight to the end of the hallway towards the Fire Exit door.`,
             `Exit the building safely and proceed to a safe clearing/emergency holding area.`
           ];
+        } else if (roomName === "A10" || roomName === "B12") {
+          exitName = "Main Entrance Exit"; distance = "~16 meters";
+          path = [[doorX, doorY], [536, 361], [536, 245], [556, 245]];
+          segments = [{ pts: path, is2F: false, hasArrow: true }];
+          steps = [
+            `Exit your room and proceed straight across the hallway into the lobby.`,
+            `Proceed straight towards the guard's desk and main entrance.`,
+            `Exit through the main entrance door to the outdoor assembly area.`
+          ];
         } else {
           exitName = "Main Entrance Exit"; distance = "~20 meters";
           path = [[doorX, doorY], [doorX, 361], [536, 361], [536, 245], [556, 245]];
@@ -468,8 +491,8 @@
           const turnDir = isTopRow ? "left" : "right";
           steps = [
             `Turn ${turnDir} from your room going to the hallway.`,
-            `Turn right at the end of the hallway towards the guard's desk and main entrance.`,
-            `Exit the building safely and proceed to a safe clearing/emergency holding area.`
+            `Turn left at the end of the hallway towards the guard's desk and main entrance.`,
+            `Exit through the main entrance door on your right to the safe clearing area.`
           ];
         }
       }
@@ -575,8 +598,11 @@
     return { path, segments, exitName, distance, steps, rx, ry, doorX, doorY, floor, isTopRow };
   }
 
-  function renderFireExitSign(svgGroup, x, y) {
+  function renderFireExitSign(svgGroup, x, y, angle = 0) {
     const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    if (angle) {
+      g.setAttribute("transform", `rotate(${angle}, ${x}, ${y})`);
+    }
     const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     rect.setAttribute("x", x - 26); rect.setAttribute("y", y - 10);
     rect.setAttribute("width", "52"); rect.setAttribute("height", "20");
@@ -634,7 +660,7 @@
       <div class="signage-page">
         <div>
           <div class="card-header">
-            <img src="dorm-logo.png" style="height: 48px; width: auto;" alt="Sampaguita Logo" onerror="this.style.display='none'">
+            <img src="dorm-logo.png" style="height: 64px; width: auto;" alt="Sampaguita Logo" onerror="this.style.display='none'">
             <div>
               <h1>EMERGENCY EVACUATION PLAN</h1>
               <p>SAMPAGUITA RESIDENCE HALL • AY 2026-2027</p>
@@ -697,28 +723,28 @@
     if (!svgEl) return;
 
     // ViewBox Cropping with full headroom and footroom for cat ear callout badges and vertical exit signs
-    let cropViewBox = "50 20 960 440";
+    let cropViewBox = "20 20 1020 440";
     if (roomName === "DM Office") {
-      cropViewBox = "350 100 240 210";
+      cropViewBox = "360 85 360 200";
     } else if (roomName.startsWith("D")) {
-      cropViewBox = "500 20 500 260";
+      cropViewBox = "490 35 520 250";
     } else if (roomName.startsWith("C")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "500 20 500 260";
+        cropViewBox = "490 35 520 250";
       } else {
-        cropViewBox = "500 20 500 340";
+        cropViewBox = "490 35 520 330";
       }
     } else if (roomName.startsWith("A")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 210 500 250";
+        cropViewBox = "55 170 535 295";
       } else {
-        cropViewBox = "85 180 500 280";
+        cropViewBox = "55 170 535 295";
       }
     } else if (roomName.startsWith("B")) {
       if (res.exitName.includes("Fire Exit")) {
-        cropViewBox = "85 210 500 250";
+        cropViewBox = "55 170 535 295";
       } else {
-        cropViewBox = "85 170 500 290";
+        cropViewBox = "55 170 535 295";
       }
     }
 
@@ -874,7 +900,7 @@
       const maxY = Math.max(...targetRoom.pts.map(p => p[1]));
 
       // Position callout badge OUTSIDE room cell (above top row, below bottom row)
-      const pinY = res.isTopRow ? minY - 20 : maxY + 20;
+      const pinY = res.isTopRow ? minY - 16 : maxY + 16;
       const targetY = res.isTopRow ? minY : maxY;
 
       // Single continuous cat speech bubble path (ears + body + tail pointer)
@@ -889,10 +915,10 @@
           L ${doorX + 15},${pinY + 11}
           Q ${doorX + 25},${pinY + 11} ${doorX + 25},${pinY}
           Q ${doorX + 25},${pinY - 11} ${doorX + 18},${pinY - 11}
-          L ${doorX + 12},${pinY - 21}
+          L ${doorX + 12},${pinY - 16}
           L ${doorX + 5},${pinY - 11}
           L ${doorX - 5},${pinY - 11}
-          L ${doorX - 12},${pinY - 21}
+          L ${doorX - 12},${pinY - 16}
           L ${doorX - 18},${pinY - 11}
           Q ${doorX - 25},${pinY - 11} ${doorX - 25},${pinY}
           Q ${doorX - 25},${pinY + 11} ${doorX - 15},${pinY + 11}
@@ -907,10 +933,10 @@
           L ${doorX + 15},${pinY - 11}
           Q ${doorX + 25},${pinY - 11} ${doorX + 25},${pinY}
           Q ${doorX + 25},${pinY + 11} ${doorX + 18},${pinY + 11}
-          L ${doorX + 12},${pinY + 21}
+          L ${doorX + 12},${pinY + 16}
           L ${doorX + 5},${pinY + 11}
           L ${doorX - 5},${pinY + 11}
-          L ${doorX - 12},${pinY + 21}
+          L ${doorX - 12},${pinY + 16}
           L ${doorX - 18},${pinY + 11}
           Q ${doorX - 25},${pinY + 11} ${doorX - 25},${pinY}
           Q ${doorX - 25},${pinY - 11} ${doorX - 15},${pinY - 11}
@@ -971,29 +997,39 @@
       pinsGroup.appendChild(pinG);
     }
 
-    // Place Fire Exit Signs OUTSIDE doorways so they do NOT cover terminal path arrowheads
+    // Helper to render fire exit signs with automatic collision avoidance against the active room callout pin
+    const safeRenderFireExitSign = (svgGroup, x, y, angle = 0) => {
+      let finalX = x;
+      let finalY = y;
+      if (typeof doorX !== 'undefined' && typeof pinY !== 'undefined') {
+        if (Math.abs(x - doorX) < 55 && Math.abs(y - pinY) < 45) {
+          finalY = y + 50;
+        }
+      }
+      renderFireExitSign(svgGroup, finalX, finalY, angle);
+    };
+
+    // Place Fire Exit Signs OUTSIDE exterior building walls and doorways
     if (floor === "GF") {
       if (roomName.startsWith("D") || roomName === "DM Office") {
-        renderFireExitSign(pinsGroup, 960, 210);
-        renderFireExitSign(pinsGroup, 556, 280);
+        safeRenderFireExitSign(pinsGroup, 995, 178, 90);
+        safeRenderFireExitSign(pinsGroup, 570, 250, 0);
       } else if (roomName.startsWith("A")) {
-        renderFireExitSign(pinsGroup, 111, 428);
-        renderFireExitSign(pinsGroup, 556, 280);
+        safeRenderFireExitSign(pinsGroup, 76, 395, 90);
+        safeRenderFireExitSign(pinsGroup, 570, 250, 90);
       }
     } else {
       if (roomName.startsWith("C")) {
         if (res.exitName.includes("Fire Exit")) {
-          renderFireExitSign(pinsGroup, 960, 78);
+          safeRenderFireExitSign(pinsGroup, 995, 109, 90);
         } else {
-          renderFireExitSign(pinsGroup, 585, 344);
-          renderFireExitSign(pinsGroup, 556, 280);
+          safeRenderFireExitSign(pinsGroup, 570, 250, 0);
         }
       } else if (roomName.startsWith("B")) {
         if (res.exitName.includes("Fire Exit")) {
-          renderFireExitSign(pinsGroup, 111, 298);
+          safeRenderFireExitSign(pinsGroup, 76, 327, 90);
         } else {
-          renderFireExitSign(pinsGroup, 585, 344);
-          renderFireExitSign(pinsGroup, 556, 280);
+          safeRenderFireExitSign(pinsGroup, 570, 250, 90);
         }
       }
     }

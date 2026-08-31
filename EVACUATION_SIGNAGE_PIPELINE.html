@@ -230,9 +230,12 @@
     <!-- Printable Signage Card -->
     <div id="signage-card">
       <div>
-        <div class="card-header">
-          <h2>EMERGENCY EVACUATION</h2>
-          <p>SAMPAGUITA RESIDENCE HALL</p>
+        <div class="card-header" style="display: flex; align-items: center; justify-content: center; gap: 16px;">
+          <img src="dorm-logo.png" style="height: 64px; width: auto;" alt="Sampaguita Logo" onerror="this.style.display='none'">
+          <div>
+            <h2>EMERGENCY EVACUATION</h2>
+            <p>SAMPAGUITA RESIDENCE HALL</p>
+          </div>
         </div>
 
         <div class="card-body">
@@ -476,7 +479,7 @@
           steps = [
             `Exit ${roomName} into Corridor D hallway.`,
             `Turn LEFT towards the central lobby hallway.`,
-            `Turn SOUTH into the Lobby, then turn RIGHT (East) out through the Main Entrance Door.`
+            `Turn LEFT at the end of the hallway towards the guard's desk and main entrance.`
           ];
         }
       } else {
@@ -498,7 +501,7 @@
           steps = [
             `Exit ${roomName} into Corridor A hallway.`,
             `Turn RIGHT towards the central lobby hallway.`,
-            `Turn NORTH into the Lobby, then turn RIGHT (East) out through the Main Entrance Door.`
+            `Turn LEFT at the end of the hallway towards the guard's desk and main entrance.`
           ];
         }
       }
@@ -682,8 +685,11 @@
     }
 
     // 3. Render Yellow & Black FIRE EXIT Signages (based on Reference Image)
-    const renderFireExitSign = (x, y, labelText) => {
+    const renderFireExitSign = (x, y, labelText, angle = 0) => {
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      if (angle) {
+        g.setAttribute("transform", `rotate(${angle}, ${x}, ${y})`);
+      }
       
       // Yellow Signage Box with rounded corners and double border
       const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -754,13 +760,15 @@
       pinsGroup.appendChild(g);
     };
 
-    // Place Fire Exit Signages at designated wing exit locations (Lobby door excluded for cleaner view)
+    // Place Fire Exit Signages OUTSIDE exterior building walls and doorways
     if (floor === "GF") {
-      renderFireExitSign(960, 178, "BOYS EXIT");
-      renderFireExitSign(111, 395, "GIRLS EXIT");
+      renderFireExitSign(995, 178, "BOYS EXIT", 90);
+      renderFireExitSign(76, 395, "GIRLS EXIT", 90);
+      renderFireExitSign(570, 250, "LOBBY EXIT", 0);
     } else {
-      renderFireExitSign(960, 109, "STAIRS EXIT");
-      renderFireExitSign(111, 327, "STAIRS EXIT");
+      renderFireExitSign(995, 109, "STAIRS EXIT", 90);
+      renderFireExitSign(76, 327, "STAIRS EXIT", 90);
+      renderFireExitSign(570, 250, "LOBBY EXIT", 90);
     }
   }
 
