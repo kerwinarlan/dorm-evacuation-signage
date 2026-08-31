@@ -732,9 +732,16 @@
         shapeEl.setAttribute("points", zone.pts.map(p => p.join(",")).join(" "));
       }
 
-      shapeEl.setAttribute("fill", style.fill);
-      shapeEl.setAttribute("stroke", style.stroke || "#111111");
-      shapeEl.setAttribute("stroke-width", "0.8");
+      // If current room, fill with vibrant yellow highlight fill
+      if (isCurrentRoom) {
+        shapeEl.setAttribute("fill", "#ffe066");
+        shapeEl.setAttribute("stroke", "#000000");
+        shapeEl.setAttribute("stroke-width", "3.5");
+      } else {
+        shapeEl.setAttribute("fill", style.fill);
+        shapeEl.setAttribute("stroke", style.stroke || "#111111");
+        shapeEl.setAttribute("stroke-width", "0.9");
+      }
       zonesGroup.appendChild(shapeEl);
 
       // Empty Room X (Faint gray cross line)
@@ -755,9 +762,11 @@
         zonesGroup.appendChild(x2);
       }
 
-      // Dorm Room Labels ONLY (Skip Hallways, Stairwells, and non-dorm room labels)
-      const isResidentRoom = zone.name && (/^(A|B|C|D)\d+$/.test(zone.name) || zone.name === "DM Office") && zone.cat !== "empty";
-      if (isResidentRoom && zone.pts) {
+      // Dorm Room Labels ONLY (Skip non-dorm room labels like DM Office on resident cards)
+      const isResidentRoom = zone.name && /^(A|B|C|D)\d+$/.test(zone.name) && zone.cat !== "empty";
+      const shouldDrawLabel = (roomName === "DM Office" && zone.name === "DM Office") || isResidentRoom;
+
+      if (shouldDrawLabel && zone.pts) {
         let labelX = zone.pts.reduce((sum, p) => sum + p[0], 0) / zone.pts.length;
         let labelY = zone.pts.reduce((sum, p) => sum + p[1], 0) / zone.pts.length;
 
@@ -766,7 +775,7 @@
         txt.textContent = zone.name;
 
         if (isCurrentRoom) {
-          txt.setAttribute("font-size", "11px");
+          txt.setAttribute("font-size", "12px");
           txt.setAttribute("font-weight", "900");
           txt.setAttribute("fill", "#000000");
         }
@@ -774,14 +783,14 @@
       }
     });
 
-    // Draw thick solid black highlight box for current target room ON TOP of all zones (4x thicker than other rooms)
+    // Draw heavy solid black highlight box for current target room ON TOP of all zones so its borders stand out
     const activeZone = model.find(z => z.name === roomName);
     if (activeZone && activeZone.pts) {
       const targetBox = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
       targetBox.setAttribute("points", activeZone.pts.map(p => p.join(",")).join(" "));
       targetBox.setAttribute("fill", "none");
       targetBox.setAttribute("stroke", "#000000");
-      targetBox.setAttribute("stroke-width", "3.2");
+      targetBox.setAttribute("stroke-width", "4.5");
       targetBox.setAttribute("stroke-linejoin", "miter");
       zonesGroup.appendChild(targetBox);
     }
